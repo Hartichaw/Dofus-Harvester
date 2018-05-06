@@ -1,0 +1,311 @@
+#include <windows.h>
+#include <iostream>
+#include <stdio.h>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+#include <vector>
+#include <windows.h>
+#include <Winuser.h>
+
+using namespace std;
+using namespace cv;
+
+
+//CONSTANTES A MODIFIER
+const int DEBUG = 1;
+const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.14:2";
+
+//CONSTANTES A PAS TOUCHER (sauf si tu sais ce que tu fais )
+
+const int SIZE_SEARCH_ZONE = 10;
+const int PRESS_Y = 1;
+const int DETECTION_THRESHOLD = 5;
+const int SIZE_RECT = 15;
+const Scalar RED = Scalar(5, 5, 255);
+const Scalar BLUE = Scalar(255, 5, 5);
+
+const float ROW_START_COEFF = 0.04074, ROW_STEP_COEFF = 0.04074, ROW_END_COEFF = 0.8055;
+const float COL_START_COEFF = 0.20520, COL_STEP_COEFF = 0.02227, COL_END_COEFF = 0.8437;
+
+Mat hwnd2mat(HWND hwnd)
+{
+	HDC hwindowDC, hwindowCompatibleDC;
+
+	int height, width, srcheight, srcwidth;
+	HBITMAP hbwindow;
+	Mat src;
+	BITMAPINFOHEADER  bi;
+
+	hwindowDC = GetDC(hwnd);
+	hwindowCompatibleDC = CreateCompatibleDC(hwindowDC);
+	SetStretchBltMode(hwindowCompatibleDC, COLORONCOLOR);
+
+	RECT windowsize;    // get the height and width of the screen
+	GetClientRect(hwnd, &windowsize);
+
+	srcheight = windowsize.bottom;
+	srcwidth = windowsize.right;
+	height = windowsize.bottom / 1;  //change this to whatever size you want to resize to
+	width = windowsize.right / 1;
+
+	src.create(height, width, CV_8UC4);
+
+	// create a bitmap
+	hbwindow = CreateCompatibleBitmap(hwindowDC, width, height);
+	bi.biSize = sizeof(BITMAPINFOHEADER);    //http://msdn.microsoft.com/en-us/library/windows/window/dd183402%28v=vs.85%29.aspx
+	bi.biWidth = width;
+	bi.biHeight = -height;  //this is the line that makes it draw upside down or not
+	bi.biPlanes = 1;
+	bi.biBitCount = 32;
+	bi.biCompression = BI_RGB;
+	bi.biSizeImage = 0;
+	bi.biXPelsPerMeter = 0;
+	bi.biYPelsPerMeter = 0;
+	bi.biClrUsed = 0;
+	bi.biClrImportant = 0;
+
+	// use the previously created device context with the bitmap
+	SelectObject(hwindowCompatibleDC, hbwindow);
+	// copy from the window device context to the bitmap device context
+	StretchBlt(hwindowCompatibleDC, 0, 0, width, height, hwindowDC, 0, 0, srcwidth, srcheight, SRCCOPY); //change SRCCOPY to NOTSRCCOPY for wacky colors !
+	GetDIBits(hwindowCompatibleDC, hbwindow, 0, height, src.data, (BITMAPINFO *)&bi, DIB_RGB_COLORS);  //copy from hwindowCompatibleDC to hbwindow
+	cvtColor(src, src, CV_BGRA2BGR);
+																									   
+	// avoid memory leak
+	DeleteObject(hbwindow);
+	DeleteDC(hwindowCompatibleDC);
+	ReleaseDC(hwnd, hwindowDC);
+
+	return src;
+}
+
+Mat convertBitmapToMat()
+{
+
+}
+
+Mat getCursor() // en chantier
+{
+	
+	BITMAP hMask,hColor;
+	ICONINFO ii;
+
+	GetIconInfo((HICON)GetCursor(), &ii);
+	GetObject(ii.hbmMask, sizeof(BITMAP), &hMask);
+	GetObject(ii.hbmColor, sizeof(BITMAP), &hColor);
+
+}
+
+Mat imgProvider(int PRESS_Y=0) {
+
+	//capture l'image de la fenêtre dofus
+	//si PRESS_Y=1 on appuie sur y avant de prendre la capture
+	
+	HWND desktopImgHWND = FindWindowA(NULL, NAME_DOFUS_WINDOW);
+	if (desktopImgHWND == NULL)
+	{
+		cout << "Dofus n'est pas ouvert" << endl;
+		system("pause");
+		
+	}
+
+	SetForegroundWindow(desktopImgHWND);
+	if( PRESS_Y == 1){Sleep(100);PostMessage(desktopImgHWND, WM_KEYDOWN, 0x59, 0);} //press y
+	Sleep(200);
+	Mat desktopImgMAT = hwnd2mat(desktopImgHWND);
+	if (PRESS_Y == 1) { Sleep(100); PostMessage(desktopImgHWND, WM_KEYUP, 0x59, 0); } //release y
+
+	return desktopImgMAT;
+}
+
+
+
+vector<vector<int>> scanRessource()
+{
+
+	/*
+		VARIABLES
+	*/
+
+	//Image recuperee de la fenetre dofus
+	Mat Img = imgProvider(PRESS_Y); // pressing y
+
+
+	// Variables nécessaires a la creation de la grille de points
+	int ROW_NB = Img.rows;
+	int COL_NB = Img.cols;
+
+	int ROW_START = int(ROW_NB*ROW_START_COEFF);
+	int	ROW_STEP = int(ROW_NB*ROW_STEP_COEFF);
+	int	ROW_END = int(ROW_NB*ROW_END_COEFF);
+
+	int COL_START = int(COL_NB * COL_START_COEFF);
+	int	COL_STEP = int(COL_NB * COL_STEP_COEFF);
+	int	COL_END = int(COL_NB * COL_END_COEFF);
+
+	//Matrices pour stocker les resultats intermediraires
+	Mat  rsz_img, thresh_img, morpho_output, mask,displayImg;
+
+	//Tableau de sortie pour stocker les coordonnees des ressources
+	vector<vector<int>>  tabRessources;
+	vector<int> RessCoordinates(2);
+	
+	// seuils de couleurs necessaires pour detourer les ressources
+	Scalar lower_color = Scalar(160, 190, 200);
+	Scalar upper_color = Scalar(248, 245, 235);
+
+	// kernels des operations morphologiques
+	Mat kernel_erode = getStructuringElement(MORPH_ELLIPSE, Size(2, 2));
+	Mat kernel_dilate = getStructuringElement(MORPH_ELLIPSE, Size(10, 10));
+
+
+	/*
+	PROCESSING
+	*/
+
+	
+	// on seuille l'image pour ne garder que les couleurs proches du contour des ressources
+	// en sortie: img binaire, 1=couleur du contour , 0 sinon
+	inRange(Img, lower_color, upper_color, thresh_img); 
+
+	// erosion/ dilatation, supprimes les petits pixels assimilies a du bruit
+	morphologyEx(thresh_img, mask, MORPH_ERODE, kernel_erode);
+	morphologyEx(mask, morpho_output, MORPH_DILATE, kernel_dilate);
+
+
+
+	//Detection de la possition des ressources
+	// on projette une grille sur la map et on regarde les points de la grille qui sont proche des ressources
+	for(int row = ROW_START; row < ROW_END;  row = row + ROW_STEP)
+	{
+		for(int col = COL_START; col < COL_END; col = col + COL_STEP)
+
+		{
+
+			//Pour chaque point de la grille on regarde si il y a des pixel à 1 dans le voisinage
+			int rowTopLeft = row - SIZE_SEARCH_ZONE; if (rowTopLeft < 0) { rowTopLeft = 0; }
+			int colTopLeft = col - SIZE_SEARCH_ZONE; if (colTopLeft < 0) { colTopLeft = 0; }
+			int rowBottomRight = row + SIZE_SEARCH_ZONE; if (rowBottomRight > morpho_output.rows) { rowTopLeft = morpho_output.rows; }
+			int colBottomRight = col + SIZE_SEARCH_ZONE; if (colBottomRight > morpho_output.cols) { rowTopLeft = morpho_output.cols; }
+			Mat ROI = morpho_output(Range(rowTopLeft, rowBottomRight), Range(colTopLeft, colBottomRight));
+			int score = countNonZero(ROI);
+
+			if (score > DETECTION_THRESHOLD)
+			{
+				//Si on a détecté un point on l'enregistre
+				RessCoordinates[0]=row;
+				RessCoordinates[1]=col;
+				tabRessources.push_back(RessCoordinates);
+			}
+
+			// afficher dans image
+			//if (DEBUG == 1) { circle(morpho_output, Point(col, row), 3, BLUE); }
+			//if (DEBUG == 1) { circle(Img, Point(col, row), 3, BLUE); }
+		}
+	}
+
+	
+	// Dans la version superieure
+	// Controle des points trouvés pour ne garder que les ressoruces récoltables
+	/*for (int i = 0; i<tabRessources.size(); i++)
+	{
+		//tabRessources[i][1]
+		SetCursorPos(tabRessources[i][1], tabRessources[i][0]);
+		//Mat regionCurseur = Img(range(row - 10, col - 10), range(row + 10, row - 10));
+		Sleep(100);
+	}*/
+
+
+	
+	// Windows creation in debug mode
+	if (DEBUG == 1)
+	{
+
+		for (int i = 0; i<tabRessources.size(); i++)
+		{
+			rectangle(Img, Point(tabRessources[i][1] - SIZE_RECT, tabRessources[i][0] - SIZE_RECT), Point(tabRessources[i][1] + SIZE_RECT, tabRessources[i][0] + SIZE_RECT), RED, 4);
+		}
+		namedWindow("Provided image", WINDOW_NORMAL);
+		imwrite("C:/Users/cedri/Pictures/Desktop_capture.png", Img);
+		resize(Img, displayImg, Size(0,0),0.5,0.5);
+		imshow("Provided image", displayImg);
+
+		namedWindow("Morpho Output", WINDOW_NORMAL);
+		resize(morpho_output, displayImg, Size(0, 0), 0.5, 0.5);
+		imshow("Morpho Output", displayImg);
+		
+		//imwrite("C:/Users/cedri/Pictures/Bot-gray.png", displayImg);
+		//imwrite("C:/Users/cedri/Pictures/Bot-Img_and_grid.png", Img);
+
+	}
+
+	return tabRessources;
+
+	
+
+}
+
+/*
+
+Bool isCursorBlue(Mat roi, threshold)
+{
+
+	Score = cv.CountNonZero(ROI)
+
+		If score > threshold
+			Return true
+		Return false
+}
+
+
+void isHarvestable(vector &Tab_ressource)
+{
+
+for(  ressource in Tab_ressource)
+{
+//
+SetCursor(row, col)
+
+//capture de l'image du desktop
+HWND desktopImgHWND = FindWindowA(NULL,"nom fenêtre");
+Mat desktopImgMAT = hwnd2mat(desktopImgHWND)
+
+// on zoom sur la zone du curseur
+Mat regionCurseur = desktopImgMAT(range(row - 10, col - 10), range(row + 10, row - 10))
+
+// Si le curseur et rouge et pas bleu,
+if(not  scanPixNb(regionCurseur, THRESH_BLUE_CURSOR))
+{removeRessource(Tab_ressource, Ressource)}
+}
+}
+
+
+
+
+
+Main #######
+
+
+
+FOR each map
+
+DO
+
+DO
+
+Tab_ressource = scanRessource()
+
+isHarvestable(&Tab_ressource) //met à jour la liste des ressources en ne laissant celles récoltables                   
+
+IF Tab_ressource = empty
+
+THEN
+
+Break // on sort du while
+
+harvest(Tab_ressource)
+
+WHILE(1)
+
+DONE*/
