@@ -8,13 +8,19 @@
 #include <windows.h>
 #include <Winuser.h>
 
+
+
 using namespace std;
 using namespace cv;
 
 
-//CONSTANTES A MODIFIER
-const int DEBUG = 1;
-const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.14:2";
+
+
+
+//CONSTANTES A MODIFIER SI BESOIN
+const int DEBUG = 1; // 0 pour ne pas display les images
+const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.14:3";
+const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
 
 //CONSTANTES A PAS TOUCHER (sauf si tu sais ce que tu fais )
 
@@ -80,21 +86,57 @@ Mat hwnd2mat(HWND hwnd)
 	return src;
 }
 
-Mat convertBitmapToMat()
-{
-
-}
-
 Mat getCursor() // en chantier
 {
 	
-	BITMAP hMask,hColor;
-	ICONINFO ii;
+	Mat OutputCursorImg; // matrice de  sortie
 
-	GetIconInfo((HICON)GetCursor(), &ii);
-	GetObject(ii.hbmMask, sizeof(BITMAP), &hMask);
-	GetObject(ii.hbmColor, sizeof(BITMAP), &hColor);
+	// On récupère l'environnement de la fenêtre
+	HDC hdcScreen = GetDC(NULL);
+	HDC hdcMem = CreateCompatibleDC(hdcScreen);
 
+	// Création de la bitmap et du canvas dans lequel on va recuperer l'image.
+	HBITMAP hbmCanvas = CreateCompatibleBitmap(hdcScreen, 256, 256);
+	HGDIOBJ hbmOld = SelectObject(hdcMem, hbmCanvas);
+
+	// Get information about the global cursor.
+	CURSORINFO ci;
+	ci.cbSize = sizeof(ci);
+	GetCursorInfo(&ci);
+
+	// information de l'icon (conversion HBM -> MAT)
+	ICONINFO ii = { 0 };
+	BITMAP bm;
+	GetIconInfo(ci.hCursor, &ii);
+	GetObject(ii.hbmMask, sizeof(BITMAP), &bm);
+
+	// On transfère les données du curseur dans le canvas.
+	DrawIcon(hdcMem, 0, 0, ci.hCursor);
+	
+	
+
+	//Si les informmation remontées sont cohérentes
+	if (bm.bmHeight > 0 && bm.bmWidth > 0)
+	{
+		
+		Mat image(bm.bmHeight, bm.bmWidth, CV_8UC3);
+		// On parcourt chaque pixel pour mettre à jour la matrice de sortie
+		for (int i = 0; i < bm.bmHeight; i++) {
+			for (int j = 0; j < bm.bmWidth; j++) {
+
+				COLORREF c = GetPixel(hdcMem, i, j);
+				
+				image.at<cv::Vec3b>(i, j)[0] = (int)GetBValue(c);
+				image.at<cv::Vec3b>(i, j)[1] = (int)GetGValue(c);
+				image.at<cv::Vec3b>(i, j)[2] = (int)GetRValue(c);
+
+			}
+		}
+		OutputCursorImg = image;
+	}
+
+
+	return OutputCursorImg;
 }
 
 Mat imgProvider(int PRESS_Y=0) {
@@ -119,8 +161,6 @@ Mat imgProvider(int PRESS_Y=0) {
 	return desktopImgMAT;
 }
 
-
-
 vector<vector<int>> scanRessource()
 {
 
@@ -144,11 +184,14 @@ vector<vector<int>> scanRessource()
 	int	COL_STEP = int(COL_NB * COL_STEP_COEFF);
 	int	COL_END = int(COL_NB * COL_END_COEFF);
 
+	int scoredifference;
+
 	//Matrices pour stocker les resultats intermediraires
-	Mat  rsz_img, thresh_img, morpho_output, mask,displayImg;
+	Mat  rsz_img, thresh_img, morpho_output, mask,displayImg, regionCurseur;
+	Mat ImgRecolte = imread(TEMPLATE_ICON_PAYSAN, CV_LOAD_IMAGE_COLOR);
 
 	//Tableau de sortie pour stocker les coordonnees des ressources
-	vector<vector<int>>  tabRessources;
+	vector<vector<int>>  tabRessources,outputTab;
 	vector<int> RessCoordinates(2);
 	
 	// seuils de couleurs necessaires pour detourer les ressources
@@ -206,15 +249,31 @@ vector<vector<int>> scanRessource()
 	}
 
 	
-	// Dans la version superieure
 	// Controle des points trouvés pour ne garder que les ressoruces récoltables
-	/*for (int i = 0; i<tabRessources.size(); i++)
+	for (int i = 0; i<tabRessources.size(); i++)
 	{
-		//tabRessources[i][1]
+
 		SetCursorPos(tabRessources[i][1], tabRessources[i][0]);
-		//Mat regionCurseur = Img(range(row - 10, col - 10), range(row + 10, row - 10));
-		Sleep(100);
-	}*/
+		regionCurseur = getCursor();
+		//imwrite(string{ "C:/Users/cedri/Pictures/curseur/Cursor" + to_string(i) + ".png"}, regionCurseur);
+
+		if (ImgRecolte.rows == regionCurseur.rows && ImgRecolte.cols == regionCurseur.cols)
+		{
+			subtract(ImgRecolte, regionCurseur, regionCurseur);
+			scoredifference = (int)sum(sum(regionCurseur))[0];
+
+			
+			if (scoredifference == 0)
+			{
+				outputTab.push_back(tabRessources[i]);
+			}
+		}
+		else
+		{
+			cout << "Les curseurs n'ont pas la même dimension" << endl;
+		}
+		Sleep(200);
+	}
 
 
 	
@@ -222,25 +281,28 @@ vector<vector<int>> scanRessource()
 	if (DEBUG == 1)
 	{
 
-		for (int i = 0; i<tabRessources.size(); i++)
+		for (int i = 0; i<outputTab.size(); i++)
 		{
-			rectangle(Img, Point(tabRessources[i][1] - SIZE_RECT, tabRessources[i][0] - SIZE_RECT), Point(tabRessources[i][1] + SIZE_RECT, tabRessources[i][0] + SIZE_RECT), RED, 4);
+			rectangle(Img, Point(outputTab[i][1] - SIZE_RECT, outputTab[i][0] - SIZE_RECT), Point(outputTab[i][1] + SIZE_RECT, outputTab[i][0] + SIZE_RECT), RED, 4);
 		}
 		namedWindow("Provided image", WINDOW_NORMAL);
-		imwrite("C:/Users/cedri/Pictures/Desktop_capture.png", Img);
+		//imwrite("C:/Users/cedri/Pictures/Desktop_capture.png", Img);
 		resize(Img, displayImg, Size(0,0),0.5,0.5);
 		imshow("Provided image", displayImg);
+		//imwrite("C:/Users/cedri/Pictures/Bot-Img_and_grid.png", displayImg);
 
 		namedWindow("Morpho Output", WINDOW_NORMAL);
 		resize(morpho_output, displayImg, Size(0, 0), 0.5, 0.5);
 		imshow("Morpho Output", displayImg);
-		
 		//imwrite("C:/Users/cedri/Pictures/Bot-gray.png", displayImg);
-		//imwrite("C:/Users/cedri/Pictures/Bot-Img_and_grid.png", Img);
+		
+		
+		
+		
 
 	}
 
-	return tabRessources;
+	return outputTab;
 
 	
 

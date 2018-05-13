@@ -1,41 +1,100 @@
 #include <iostream>
-#include <stdio.h>
+#include <windows.h>
+
+#include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
-#include "DetectionRessource.h"
+#include <opencv2/imgproc.hpp>
+
+/*
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>*/
+#include <vector>
+
+#include "gestionDeplacement.h"
+#include "gestionCombats.h"
+#include "gestionInterface.h"
+#include "recolterRessources.h"
+#include "gestionImage.h"
+#include "gestionPopUp.h"
+
 
 using namespace std;
 using namespace cv;
 
 
-int main(int argc, char* argv)
+bool init(HWND & hWnd)
+{	
+	Sleep(1000);
+
+    //hWnd = FindWindowA(NULL, "Sac-Lerieur - Dofus 2.46.14:3");
+	hWnd = FindWindowA(NULL, "Mykhoz - Dofus 2.46.14:3");
+	if (hWnd == NULL)
+    {
+        cout << "Dofus n'est pas ouvert" << endl;
+        system("pause");
+        return false;
+    }
+
+    // Dofus est ouvert
+    SetForegroundWindow(hWnd);
+    SetCursorPos(0, 0); // X, Y
+    Sleep(2000);
+
+    return true;
+}
+
+
+int main(/*int argc, char** argv*/)
 {
+	HWND dofusScreen;
+	DWORD t1, t2;
 
-	char key = 'a';
-	Mat image_src;
-	const string filename = "C:/Users/cedri/Pictures/test_grid.png";
-	vector<vector<int>> tabresultat;
-
-
-
-	/*image_src = imread(filename, CV_LOAD_IMAGE_COLOR);   // Read the file
-
-	if (!image_src.data)                              // Check for invalid input
-	{
-		cout << "Could not open or find the image" << std::endl;
+	if (!init(dofusScreen)) {
 		return -1;
-	}*/
+	}
+//	cout << "avant detection combat" << endl;
+
+//	bool modeCreature = false, modeTactique = false;
+//	detectionDebutCombat(dofusScreen, modeCreature, modeTactique);
+
+	//cout << "après detection combat" << endl;
+
+
+	//vector<POINT> vec = detectionPopUps(dofusScreen);
+
 	
-	tabresultat = scanRessource();
-
-	for (int i = 0; i<tabresultat.size(); i++)
+	while (1)
 	{
-		cout << tabresultat[i][0] << "   " << tabresultat[i][1] << endl;
-	}
+	
+		gestionCombat(dofusScreen);
+	
+		t1 = GetTickCount();
+		if (gestionPopUps(dofusScreen)) {
 
-	while (key != 'Q' && key != 'q') {
-		key = cvWaitKey(10);
+		}
+		t2 = GetTickCount();	
+		cout << "Temps d'execution gestion pop-ups : " << t2 - t1 << endl;
+
+		Sleep(1000);
 	}
+	
+	//cout << "après detection combat" << endl;
+   // trajetAstrub();
+    //trajetBanqueAstrub();
+    //gestionBanqueAstrub();  // Décharge tous l'inventaire dans la banque
+
+	/*trajetChampsBonta();
+
+    recolterChampsBonta();
+	*/
+ 
+	cout << "Fini !" << endl;
+
+    return 0;
 
 }
