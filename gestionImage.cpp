@@ -40,7 +40,7 @@ Mat hwnd2mat(HWND hwnd)
 
 	// create a bitmap
 	hbwindow = CreateCompatibleBitmap(hwindowDC, width, height);
-	bi.biSize = sizeof(BITMAPINFOHEADER);    
+	bi.biSize = sizeof(BITMAPINFOHEADER);    //http://msdn.microsoft.com/en-us/library/windows/window/dd183402%28v=vs.85%29.aspx
 	bi.biWidth = width;
 	bi.biHeight = -height;  //this is the line that makes it draw upside down or not
 	bi.biPlanes = 1;

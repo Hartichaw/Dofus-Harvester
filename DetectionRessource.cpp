@@ -15,8 +15,6 @@ using namespace cv;
 
 
 
-/*test commit*/
-
 //CONSTANTES A MODIFIER SI BESOIN
 const int DEBUG = 1; // 0 pour ne pas display les images
 const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.14:3";

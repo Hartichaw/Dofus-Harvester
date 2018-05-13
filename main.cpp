@@ -2,17 +2,10 @@
 #include <windows.h>
 
 #include <opencv2/opencv.hpp>
-#include <opencv2/core.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-
-/*
-#include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>*/
+#include <opencv2/imgproc/imgproc.hpp>
 #include <vector>
 
 #include "gestionDeplacement.h"
@@ -31,8 +24,7 @@ bool init(HWND & hWnd)
 {	
 	Sleep(1000);
 
-    //hWnd = FindWindowA(NULL, "Sac-Lerieur - Dofus 2.46.14:3");
-	hWnd = FindWindowA(NULL, "Mykhoz - Dofus 2.46.14:3");
+    hWnd = FindWindowA(NULL, "Sac-Lerieur - Dofus 2.46.14:3");
 	if (hWnd == NULL)
     {
         cout << "Dofus n'est pas ouvert" << endl;
