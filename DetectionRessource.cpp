@@ -15,7 +15,9 @@ using namespace cv;
 
 
 
-
+/*
+Commentaire test commit
+*/
 
 //CONSTANTES A MODIFIER SI BESOIN
 const int DEBUG = 1; // 0 pour ne pas display les images
