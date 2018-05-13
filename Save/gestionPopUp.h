@@ -1,1 +1,0 @@
-bool gestionPopUps(HWND dofusScreen);
