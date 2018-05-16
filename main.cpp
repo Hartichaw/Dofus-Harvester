@@ -25,7 +25,7 @@ bool init(HWND & hWnd)
 {	
 	Sleep(1000);
 
-    hWnd = FindWindowA(NULL, "Sac-Lerieur - Dofus 2.46.14:3");
+    hWnd = FindWindowA(NULL, "Sac-Lerieur - Dofus 2.46.15:0");
 	if (hWnd == NULL)
     {
         cout << "Dofus n'est pas ouvert" << endl;

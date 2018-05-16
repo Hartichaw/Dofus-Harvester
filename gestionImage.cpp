@@ -92,8 +92,8 @@ vector<POINT> detectionColorArray(Mat imageBGR, Scalar lowerb, Scalar upperb, in
 	Mat kernel_dilate = getStructuringElement(MORPH_ELLIPSE, Size(10, 10));
 
 	// erosion/ dilatation, supprimes les petits pixels assimilies a du bruit
-	morphologyEx(mask1, mask2, MORPH_ERODE, kernel_erode);
-	morphologyEx(mask2, maskImage, MORPH_DILATE, kernel_dilate);
+	morphologyEx(mask1, maskImage, MORPH_ERODE, kernel_erode);
+	//morphologyEx(mask2, maskImage, MORPH_DILATE, kernel_dilate);
 
 	// Modif
 

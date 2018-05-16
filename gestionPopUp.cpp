@@ -27,7 +27,9 @@ bool gestionPopUps(HWND dofusScreen)
 		//	cout << "weigh = " << abs(pos1.x - nearestPoint.x) + abs(pos1.y - nearestPoint.y) << endl;
 			Sleep(500);
 			leftClick(nearestPoint.x, nearestPoint.y);
-			Sleep(1500);
+			Sleep(1000);
+			SetCursorPos(0, 0);
+			Sleep(500);
 		}
 	}
 	
@@ -38,7 +40,9 @@ bool gestionPopUps(HWND dofusScreen)
 			cout << "weigh = " << abs(pos2.x - nearestPoint.x) + abs(pos2.y - nearestPoint.y) << endl;
 			Sleep(500);
 			leftClick(nearestPoint.x, nearestPoint.y);
-			Sleep(1500);
+			Sleep(1000);
+			SetCursorPos(0, 0);
+			Sleep(500);
 		}
 	}
 
