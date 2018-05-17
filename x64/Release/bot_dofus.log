@@ -1,9 +1,0 @@
-﻿  gestionCombats.cpp
-  gestionDeplacement.cpp
-  gestionInterface.cpp
-  main.cpp
-  recolterRessources.cpp
-  Generating code
-  All 14 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
-  Finished generating code
-  bot_dofus.vcxproj -> C:\Users\Julien Posso\Desktop\Jeux\dofus\bot_dofus\x64\Release\bot_dofus.exe
