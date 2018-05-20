@@ -16,7 +16,7 @@ using namespace cv;
 
 
 //CONSTANTES A MODIFIER SI BESOIN
-const int DEBUG = 0; // 0 pour ne pas display les images
+const int DEBUG = 1; // 0 pour ne pas display les images
 
 //const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
 const String TEMPLATE_ICON_PAYSAN = "C:/opencv/cursor_paysan.png";
@@ -226,10 +226,9 @@ vector<vector<int>> scanRessource(HWND dofusScreen)
 	inRange(thresh_img, lower_color, upper_color, thresh_img);
 
 	// erosion/ dilatation, supprimes les petits pixels assimilies a du bruit
+
 	morphologyEx(thresh_img, mask, MORPH_ERODE, kernel_erode);
 	morphologyEx(mask, morpho_output, MORPH_DILATE, kernel_dilate);
-
-
 
 	//Detection de la possition des ressources
 	// on projette une grille sur la map et on regarde les points de la grille qui sont proche des ressources
@@ -261,12 +260,12 @@ vector<vector<int>> scanRessource(HWND dofusScreen)
 		}
 	}
 
-	
+	//cout << "tabRessources.size() = " << tabRessources.size() << endl;
 	// Controle des points trouvés pour ne garder que les ressoruces récoltables
 	for (int i = 0; i<tabRessources.size(); i++)
 	{
 
-		SetCursorPos(tabRessources[i][1], tabRessources[i][0]);
+		SetCursorPos(tabRessources[i][1], tabRessources[i][0]+22);
 		regionCurseur = getCursor();
 		//imwrite(string{ "C:/Users/cedri/Pictures/curseur/Cursor" + to_string(i) + ".png"}, regionCurseur);
 
@@ -277,6 +276,7 @@ vector<vector<int>> scanRessource(HWND dofusScreen)
 
 			if (scoredifference == 0)
 			{
+				//cout << "pssage pushback // x = " << tabRessources[i][1] << "    y = " << tabRessources[i][0] << endl;
 				outputTab.push_back(tabRessources[i]);
 			}
 		}
@@ -286,7 +286,7 @@ vector<vector<int>> scanRessource(HWND dofusScreen)
 		}
 		Sleep(100);
 	}
-
+	//cout << "outputTab.size() = " << outputTab.size() << endl;
 	
 	// Windows creation in debug mode
 	if (DEBUG == 1)
@@ -306,10 +306,7 @@ vector<vector<int>> scanRessource(HWND dofusScreen)
 		resize(morpho_output, displayImg, Size(0, 0), 0.5, 0.5);
 		imshow("Morpho Output", displayImg);
 		//imwrite("C:/Users/cedri/Pictures/Bot-gray.png", displayImg);
-		
-		//waitKey(0);
-		
-		
+
 
 	}
 

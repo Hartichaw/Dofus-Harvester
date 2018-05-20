@@ -55,14 +55,14 @@ int main(/*int argc, char** argv*/)
     //trajetBanqueAstrub();
     //gestionBanqueAstrub();  // Décharge tous l'inventaire dans la banque
 	
-	trajetChampsBonta();
+//	trajetChampsBonta();
 
-    recolterChampsBonta(dofusScreen);
+ //   recolterChampsBonta(dofusScreen);
 	
 
-	//recolterRessourcesMap(dofusScreen);
+	recolterRessourcesMap(dofusScreen);
 
-
+	waitKey(0);
 
  
 	/*	// Debug gestion combat et pop-up

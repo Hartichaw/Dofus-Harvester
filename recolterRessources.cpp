@@ -43,7 +43,7 @@ void recolterRessourcesMap(HWND dofusScreen)
 	{
 		for (int i = 0; i < posRessources.size(); i++) {
 
-			leftClick(posRessources[i][1], posRessources[i][0]);
+			leftClick(posRessources[i][1], posRessources[i][0]+22);
 
 			if (i == 0) {				// Délai à la 1ere ressource pour le le perso ait le temps de se rapproher de la ressource
 				Sleep(1500);
@@ -55,13 +55,13 @@ void recolterRessourcesMap(HWND dofusScreen)
 			Sleep(500);
 		}
 
-		for (int i = 0; i < posRessources.size(); i++) {
+	/*	for (int i = 0; i < posRessources.size(); i++) {
 
-			Sleep(2000);		// Delai de 2 seconde par ressources à la fin
+			Sleep(500);		// Delai de 2 seconde par ressources à la fin
 			gestionCombat(dofusScreen);
 			gestionPopUps(dofusScreen);
 		}
-
+		*/
 		
 
 	}
