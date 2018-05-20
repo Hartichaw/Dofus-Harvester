@@ -15,17 +15,17 @@
 #include "gestionImage.h"
 #include "gestionPopUp.h"
 
-// Test Git !!!!!!!!!!!!
-
 using namespace std;
 using namespace cv;
 
+//const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.14:3";
+const LPCSTR NAME_DOFUS_WINDOW = "Sac-Lerieur - Dofus 2.46.15:0";
 
 bool init(HWND & hWnd)
 {	
 	Sleep(1000);
 
-    hWnd = FindWindowA(NULL, "Sac-Lerieur - Dofus 2.46.15:0");
+    hWnd = FindWindowA(NULL, NAME_DOFUS_WINDOW);
 	if (hWnd == NULL)
     {
         cout << "Dofus n'est pas ouvert" << endl;
@@ -50,42 +50,40 @@ int main(/*int argc, char** argv*/)
 	if (!init(dofusScreen)) {
 		return -1;
 	}
-//	cout << "avant detection combat" << endl;
 
-//	bool modeCreature = false, modeTactique = false;
-//	detectionDebutCombat(dofusScreen, modeCreature, modeTactique);
-
-	//cout << "après detection combat" << endl;
-
-
-	//vector<POINT> vec = detectionPopUps(dofusScreen);
-
-	
-	while (1)
-	{
-	
-		gestionCombat(dofusScreen);
-	
-		t1 = GetTickCount();
-		if (gestionPopUps(dofusScreen)) {
-
-		}
-		t2 = GetTickCount();	
-		cout << "Temps d'execution gestion pop-ups : " << t2 - t1 << endl;
-
-		Sleep(1000);
-	}
-	
-	//cout << "après detection combat" << endl;
-   // trajetAstrub();
+    //trajetAstrub();
     //trajetBanqueAstrub();
     //gestionBanqueAstrub();  // Décharge tous l'inventaire dans la banque
+	
+	trajetChampsBonta();
 
-	/*trajetChampsBonta();
+    recolterChampsBonta(dofusScreen);
+	
 
-    recolterChampsBonta();
-	*/
+	//recolterRessourcesMap(dofusScreen);
+
+
+
  
+	/*	// Debug gestion combat et pop-up
+	while (1)
+	{
+
+	gestionCombat(dofusScreen);
+
+	t1 = GetTickCount();
+	if (gestionPopUps(dofusScreen)) {
+
+	}
+	t2 = GetTickCount();
+	cout << "Temps d'execution gestion pop-ups : " << t2 - t1 << endl;
+
+	Sleep(1000);
+	}
+
+	*/
+
+
 	cout << "Fini !" << endl;
 
     return 0;

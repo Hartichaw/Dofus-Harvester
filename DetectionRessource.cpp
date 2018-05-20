@@ -8,7 +8,7 @@
 #include <windows.h>
 #include <Winuser.h>
 
-
+#include "gestionImage.h"
 
 using namespace std;
 using namespace cv;
@@ -16,12 +16,17 @@ using namespace cv;
 
 
 //CONSTANTES A MODIFIER SI BESOIN
-const int DEBUG = 1; // 0 pour ne pas display les images
-const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.15:0";
-const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
+const int DEBUG = 0; // 0 pour ne pas display les images
+
+//const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
+const String TEMPLATE_ICON_PAYSAN = "C:/opencv/cursor_paysan.png";
+
+//const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.15:0";
+//const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
+
+
 
 //CONSTANTES A PAS TOUCHER (sauf si tu sais ce que tu fais )
-
 const int SIZE_SEARCH_ZONE = 10;
 const int PRESS_Y = 1;
 const int DETECTION_THRESHOLD = 5;
@@ -32,6 +37,7 @@ const Scalar BLUE = Scalar(255, 5, 5);
 const float ROW_START_COEFF = 0.04074, ROW_STEP_COEFF = 0.04074, ROW_END_COEFF = 0.8055;
 const float COL_START_COEFF = 0.20520, COL_STEP_COEFF = 0.02227, COL_END_COEFF = 0.8437;
 
+/*
 Mat hwnd2mat(HWND hwnd)
 {
 	HDC hwindowDC, hwindowCompatibleDC;
@@ -83,6 +89,7 @@ Mat hwnd2mat(HWND hwnd)
 
 	return src;
 }
+*/
 
 Mat getCursor() // en chantier
 {
@@ -137,11 +144,11 @@ Mat getCursor() // en chantier
 	return OutputCursorImg;
 }
 
-Mat imgProvider(int PRESS_Y=0) {
+Mat imgProvider(int pressY, HWND dofusScreen) {
 
 	//capture l'image de la fenêtre dofus
 	//si PRESS_Y=1 on appuie sur y avant de prendre la capture
-	
+	/*
 	HWND desktopImgHWND = FindWindowA(NULL, NAME_DOFUS_WINDOW);
 	if (desktopImgHWND == NULL)
 	{
@@ -149,17 +156,18 @@ Mat imgProvider(int PRESS_Y=0) {
 		system("pause");
 		
 	}
-
 	SetForegroundWindow(desktopImgHWND);
-	if( PRESS_Y == 1){Sleep(100);PostMessage(desktopImgHWND, WM_KEYDOWN, 0x59, 0);} //press y
+	*/
+
+	if(pressY == 1){Sleep(100);PostMessage(dofusScreen, WM_KEYDOWN, 0x59, 0);} //press y
 	Sleep(200);
-	Mat desktopImgMAT = hwnd2mat(desktopImgHWND);
-	if (PRESS_Y == 1) { Sleep(100); PostMessage(desktopImgHWND, WM_KEYUP, 0x59, 0); } //release y
+	Mat desktopImgMAT = hwnd2mat(dofusScreen);
+	if (pressY == 1) { Sleep(100); PostMessage(dofusScreen, WM_KEYUP, 0x59, 0); } //release y
 
 	return desktopImgMAT;
 }
 
-vector<vector<int>> scanRessource()
+vector<vector<int>> scanRessource(HWND dofusScreen)
 {
 
 	/*
@@ -167,9 +175,11 @@ vector<vector<int>> scanRessource()
 	*/
 
 	//Image recuperee de la fenetre dofus
-	Mat baseImg = imgProvider();
-	Mat Img = imgProvider(PRESS_Y); // pressing y
 
+//	Mat Img = imgProvider(PRESS_Y, dofusScreen); // pressing y
+
+	Mat baseImg = imgProvider(0, dofusScreen);
+	Mat Img = imgProvider(PRESS_Y, dofusScreen); // pressing y
 
 	// Variables nécessaires a la creation de la grille de points
 	int ROW_NB = Img.rows;
@@ -297,7 +307,7 @@ vector<vector<int>> scanRessource()
 		imshow("Morpho Output", displayImg);
 		//imwrite("C:/Users/cedri/Pictures/Bot-gray.png", displayImg);
 		
-		
+		//waitKey(0);
 		
 		
 

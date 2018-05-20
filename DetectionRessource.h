@@ -8,6 +8,6 @@
 using namespace std;
 using namespace cv;
 
-Mat imgProvider(int PRESS_Y = 0);
-vector<vector<int>> scanRessource();
+Mat imgProvider(int pressY, HWND dofusScreen);
+vector<vector<int>> scanRessource(HWND dofusScreen);
 Mat getCursor();

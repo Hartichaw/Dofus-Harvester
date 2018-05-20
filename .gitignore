@@ -1,0 +1,6 @@
+
+*.vcxproj
+*.filters
+bot_dofus.vcxproj.user
+bot_dofus.vcxproj
+bot_dofus.vcxproj.filters
