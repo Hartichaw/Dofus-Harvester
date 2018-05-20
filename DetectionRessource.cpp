@@ -17,7 +17,7 @@ using namespace cv;
 
 //CONSTANTES A MODIFIER SI BESOIN
 const int DEBUG = 1; // 0 pour ne pas display les images
-const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.14:3";
+const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.15:0";
 const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
 
 //CONSTANTES A PAS TOUCHER (sauf si tu sais ce que tu fais )
@@ -167,6 +167,7 @@ vector<vector<int>> scanRessource()
 	*/
 
 	//Image recuperee de la fenetre dofus
+	Mat baseImg = imgProvider();
 	Mat Img = imgProvider(PRESS_Y); // pressing y
 
 
@@ -193,12 +194,14 @@ vector<vector<int>> scanRessource()
 	vector<int> RessCoordinates(2);
 	
 	// seuils de couleurs necessaires pour detourer les ressources
-	Scalar lower_color = Scalar(160, 190, 200);
-	Scalar upper_color = Scalar(248, 245, 235);
+	//Scalar lower_color = Scalar(160, 190, 200);
+	//Scalar upper_color = Scalar(248, 245, 235);
+	Scalar lower_color = Scalar(1, 1, 1);
+	Scalar upper_color = Scalar(255, 255, 255);
 
 	// kernels des operations morphologiques
-	Mat kernel_erode = getStructuringElement(MORPH_ELLIPSE, Size(2, 2));
-	Mat kernel_dilate = getStructuringElement(MORPH_ELLIPSE, Size(10, 10));
+	Mat kernel_erode = getStructuringElement(MORPH_ELLIPSE, Size(4, 4));
+	Mat kernel_dilate = getStructuringElement(MORPH_ELLIPSE, Size(4, 4));
 
 
 	/*
@@ -208,7 +211,9 @@ vector<vector<int>> scanRessource()
 	
 	// on seuille l'image pour ne garder que les couleurs proches du contour des ressources
 	// en sortie: img binaire, 1=couleur du contour , 0 sinon
-	inRange(Img, lower_color, upper_color, thresh_img); 
+	subtract(Img, baseImg, thresh_img);
+	//cvtColor(Img, Img, CV_BGR2GRAY);
+	inRange(thresh_img, lower_color, upper_color, thresh_img);
 
 	// erosion/ dilatation, supprimes les petits pixels assimilies a du bruit
 	morphologyEx(thresh_img, mask, MORPH_ERODE, kernel_erode);
@@ -260,7 +265,6 @@ vector<vector<int>> scanRessource()
 			subtract(ImgRecolte, regionCurseur, regionCurseur);
 			scoredifference = (int)sum(sum(regionCurseur))[0];
 
-			
 			if (scoredifference == 0)
 			{
 				outputTab.push_back(tabRessources[i]);
@@ -270,9 +274,8 @@ vector<vector<int>> scanRessource()
 		{
 			cout << "Les curseurs n'ont pas la même dimension" << endl;
 		}
-		Sleep(200);
+		Sleep(100);
 	}
-
 
 	
 	// Windows creation in debug mode
