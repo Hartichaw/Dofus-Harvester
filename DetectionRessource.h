@@ -9,5 +9,5 @@ using namespace std;
 using namespace cv;
 
 Mat imgProvider(int pressY, HWND dofusScreen);
-vector<vector<int>> scanRessource(HWND dofusScreen);
+POINT scanRessource(HWND dofusScreen);
 Mat getCursor();

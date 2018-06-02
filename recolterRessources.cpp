@@ -6,6 +6,8 @@
 #include "gestionPopUp.h"
 #include "DetectionRessource.h"
 
+#include "gestionImage.h"
+
 
 using namespace std;
 
@@ -17,7 +19,8 @@ void recolterRessourcesMap(HWND dofusScreen)
 
 	// Détection des ressources
 
-	vector<vector<int>> posRessources = scanRessource(dofusScreen);
+	POINT posRessources;
+
 
 
 	/*vector<POINT> posRessources(5);		// Simulation des pos des ressources
@@ -39,32 +42,20 @@ void recolterRessourcesMap(HWND dofusScreen)
 
 	*/
 
-	if (posRessources.size() != 0)			// Si aucune ressource n'est détectée
+	do		// Si aucune ressource n'est détectée
 	{
-		for (int i = 0; i < posRessources.size(); i++) {
-
-			leftClick(posRessources[i][1], posRessources[i][0]+22);
-
-			if (i == 0) {				// Délai à la 1ere ressource pour le le perso ait le temps de se rapproher de la ressource
-				Sleep(1500);
-			}
-
-			gestionCombat(dofusScreen);
-			gestionPopUps(dofusScreen);
-
-			Sleep(500);
+		posRessources = scanRessource(dofusScreen);
+		cout << "ressource located:" << posRessources.x << "," << posRessources.y << endl;
+		if (posRessources.x >= 0 && posRessources.y >= 0)
+		{
+			leftClick(posRessources.x, posRessources.y);
 		}
-
-	/*	for (int i = 0; i < posRessources.size(); i++) {
-
-			Sleep(500);		// Delai de 2 seconde par ressources à la fin
-			gestionCombat(dofusScreen);
-			gestionPopUps(dofusScreen);
-		}
-		*/
 		
+		waitKey(3000);
+	}while (posRessources.x >= 0 && posRessources.y >= 0);
 
-	}
+	cout << "plus de ressources sur la map" << endl;
+	
 
 }
 

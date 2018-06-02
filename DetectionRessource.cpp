@@ -16,10 +16,10 @@ using namespace cv;
 
 
 //CONSTANTES A MODIFIER SI BESOIN
-const int DEBUG = 1; // 0 pour ne pas display les images
+const int DEBUG = 0; // 0 pour ne pas display les images
 
-//const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
-const String TEMPLATE_ICON_PAYSAN = "C:/opencv/cursor_paysan.png";
+const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
+//const String TEMPLATE_ICON_PAYSAN = "C:/opencv/cursor_paysan.png";
 
 //const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.15:0";
 //const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
@@ -37,61 +37,12 @@ const Scalar BLUE = Scalar(255, 5, 5);
 const float ROW_START_COEFF = 0.04074, ROW_STEP_COEFF = 0.04074, ROW_END_COEFF = 0.8055;
 const float COL_START_COEFF = 0.20520, COL_STEP_COEFF = 0.02227, COL_END_COEFF = 0.8437;
 
+
+
 /*
-Mat hwnd2mat(HWND hwnd)
-{
-	HDC hwindowDC, hwindowCompatibleDC;
-
-	int height, width, srcheight, srcwidth;
-	HBITMAP hbwindow;
-	Mat src;
-	BITMAPINFOHEADER  bi;
-
-	hwindowDC = GetDC(hwnd);
-	hwindowCompatibleDC = CreateCompatibleDC(hwindowDC);
-	SetStretchBltMode(hwindowCompatibleDC, COLORONCOLOR);
-
-	RECT windowsize;    // get the height and width of the screen
-	GetClientRect(hwnd, &windowsize);
-
-	srcheight = windowsize.bottom;
-	srcwidth = windowsize.right;
-	height = windowsize.bottom / 1;  //change this to whatever size you want to resize to
-	width = windowsize.right / 1;
-
-	src.create(height, width, CV_8UC4);
-
-	// create a bitmap
-	hbwindow = CreateCompatibleBitmap(hwindowDC, width, height);
-	bi.biSize = sizeof(BITMAPINFOHEADER);    //http://msdn.microsoft.com/en-us/library/windows/window/dd183402%28v=vs.85%29.aspx
-	bi.biWidth = width;
-	bi.biHeight = -height;  //this is the line that makes it draw upside down or not
-	bi.biPlanes = 1;
-	bi.biBitCount = 32;
-	bi.biCompression = BI_RGB;
-	bi.biSizeImage = 0;
-	bi.biXPelsPerMeter = 0;
-	bi.biYPelsPerMeter = 0;
-	bi.biClrUsed = 0;
-	bi.biClrImportant = 0;
-
-	// use the previously created device context with the bitmap
-	SelectObject(hwindowCompatibleDC, hbwindow);
-	// copy from the window device context to the bitmap device context
-	StretchBlt(hwindowCompatibleDC, 0, 0, width, height, hwindowDC, 0, 0, srcwidth, srcheight, SRCCOPY); //change SRCCOPY to NOTSRCCOPY for wacky colors !
-	GetDIBits(hwindowCompatibleDC, hbwindow, 0, height, src.data, (BITMAPINFO *)&bi, DIB_RGB_COLORS);  //copy from hwindowCompatibleDC to hbwindow
-	cvtColor(src, src, CV_BGRA2BGR);
-																									   
-	// avoid memory leak
-	DeleteObject(hbwindow);
-	DeleteDC(hwindowCompatibleDC);
-	ReleaseDC(hwnd, hwindowDC);
-
-	return src;
-}
+Mat getCursor(): Renvoie l'image du curseur courant sous forme d'openCV:MAT
 */
-
-Mat getCursor() // en chantier
+Mat getCursor() 
 {
 	
 	Mat OutputCursorImg; // matrice de  sortie
@@ -144,44 +95,37 @@ Mat getCursor() // en chantier
 	return OutputCursorImg;
 }
 
+/*
+Mat imgProvider(): Renvoie l'image de la fenêtre passée en paramètre sous forme d'openCV:MAT
+					pressY : si mis à un, capture l'image en appuyant sur Y		
+*/
 Mat imgProvider(int pressY, HWND dofusScreen) {
 
-	//capture l'image de la fenêtre dofus
-	//si PRESS_Y=1 on appuie sur y avant de prendre la capture
-	/*
-	HWND desktopImgHWND = FindWindowA(NULL, NAME_DOFUS_WINDOW);
-	if (desktopImgHWND == NULL)
-	{
-		cout << "Dofus n'est pas ouvert" << endl;
-		system("pause");
-		
-	}
-	SetForegroundWindow(desktopImgHWND);
-	*/
-
-	if(pressY == 1){Sleep(100);PostMessage(dofusScreen, WM_KEYDOWN, 0x59, 0);} //press y
-	Sleep(200);
+	if(pressY == 1){PostMessage(dofusScreen, WM_KEYDOWN, 0x59, 0);} //press y
+	waitKey(600);
 	Mat desktopImgMAT = hwnd2mat(dofusScreen);
-	if (pressY == 1) { Sleep(100); PostMessage(dofusScreen, WM_KEYUP, 0x59, 0); } //release y
+	if (pressY == 1) {PostMessage(dofusScreen, WM_KEYUP, 0x59, 0); } //release y
 
 	return desktopImgMAT;
 }
 
-vector<vector<int>> scanRessource(HWND dofusScreen)
+/*
+POINT scanRessource(): Renvoi un point représentant la position d'une ressource récoltable
+*/
+POINT scanRessource(HWND dofusScreen)
 {
 
 	/*
-		VARIABLES
+	VARIABLES
 	*/
 
-	//Image recuperee de la fenetre dofus
 
-//	Mat Img = imgProvider(PRESS_Y, dofusScreen); // pressing y
+	//	Mat Img = imgProvider(PRESS_Y, dofusScreen); // pressing y
 
 	Mat baseImg = imgProvider(0, dofusScreen);
 	Mat Img = imgProvider(PRESS_Y, dofusScreen); // pressing y
 
-	// Variables nécessaires a la creation de la grille de points
+												 // Variables nécessaires a la creation de la grille de points
 	int ROW_NB = Img.rows;
 	int COL_NB = Img.cols;
 
@@ -196,13 +140,17 @@ vector<vector<int>> scanRessource(HWND dofusScreen)
 	int scoredifference;
 
 	//Matrices pour stocker les resultats intermediraires
-	Mat  rsz_img, thresh_img, morpho_output, mask,displayImg, regionCurseur;
+	Mat  rsz_img, thresh_img, morpho_output, mask, displayImg, regionCurseur;
 	Mat ImgRecolte = imread(TEMPLATE_ICON_PAYSAN, CV_LOAD_IMAGE_COLOR);
 
+	//Point en sortie
+	POINT output_pt;
+	POINT null_output; null_output.x = -1; null_output.y = -1;
+
 	//Tableau de sortie pour stocker les coordonnees des ressources
-	vector<vector<int>>  tabRessources,outputTab;
+	vector<vector<int>>  tabRessources, outputTab;
 	vector<int> RessCoordinates(2);
-	
+
 	// seuils de couleurs necessaires pour detourer les ressources
 	//Scalar lower_color = Scalar(160, 190, 200);
 	//Scalar upper_color = Scalar(248, 245, 235);
@@ -218,7 +166,7 @@ vector<vector<int>> scanRessource(HWND dofusScreen)
 	PROCESSING
 	*/
 
-	
+
 	// on seuille l'image pour ne garder que les couleurs proches du contour des ressources
 	// en sortie: img binaire, 1=couleur du contour , 0 sinon
 	subtract(Img, baseImg, thresh_img);
@@ -232,9 +180,9 @@ vector<vector<int>> scanRessource(HWND dofusScreen)
 
 	//Detection de la possition des ressources
 	// on projette une grille sur la map et on regarde les points de la grille qui sont proche des ressources
-	for(int row = ROW_START; row < ROW_END;  row = row + ROW_STEP)
+	for (int row = ROW_START; row < ROW_END; row = row + ROW_STEP)
 	{
-		for(int col = COL_START; col < COL_END; col = col + COL_STEP)
+		for (int col = COL_START; col < COL_END; col = col + COL_STEP)
 
 		{
 
@@ -249,8 +197,8 @@ vector<vector<int>> scanRessource(HWND dofusScreen)
 			if (score > DETECTION_THRESHOLD)
 			{
 				//Si on a détecté un point on l'enregistre
-				RessCoordinates[0]=row;
-				RessCoordinates[1]=col;
+				RessCoordinates[0] = row;
+				RessCoordinates[1] = col;
 				tabRessources.push_back(RessCoordinates);
 			}
 
@@ -260,12 +208,15 @@ vector<vector<int>> scanRessource(HWND dofusScreen)
 		}
 	}
 
-	//cout << "tabRessources.size() = " << tabRessources.size() << endl;
+
 	// Controle des points trouvés pour ne garder que les ressoruces récoltables
 	for (int i = 0; i<tabRessources.size(); i++)
 	{
-
-		SetCursorPos(tabRessources[i][1], tabRessources[i][0]+22);
+		output_pt.x = tabRessources[i][1];
+		output_pt.y = tabRessources[i][0] + 22;
+		
+		SetCursorPos(output_pt.x, output_pt.y);
+		waitKey(100);
 		regionCurseur = getCursor();
 		//imwrite(string{ "C:/Users/cedri/Pictures/curseur/Cursor" + to_string(i) + ".png"}, regionCurseur);
 
@@ -277,17 +228,17 @@ vector<vector<int>> scanRessource(HWND dofusScreen)
 			if (scoredifference == 0)
 			{
 				//cout << "pssage pushback // x = " << tabRessources[i][1] << "    y = " << tabRessources[i][0] << endl;
-				outputTab.push_back(tabRessources[i]);
+
+				return output_pt;
 			}
 		}
 		else
 		{
 			cout << "Les curseurs n'ont pas la même dimension" << endl;
 		}
-		Sleep(100);
+		
 	}
-	//cout << "outputTab.size() = " << outputTab.size() << endl;
-	
+
 	// Windows creation in debug mode
 	if (DEBUG == 1)
 	{
@@ -298,7 +249,7 @@ vector<vector<int>> scanRessource(HWND dofusScreen)
 		}
 		namedWindow("Provided image", WINDOW_NORMAL);
 		//imwrite("C:/Users/cedri/Pictures/Desktop_capture.png", Img);
-		resize(Img, displayImg, Size(0,0),0.5,0.5);
+		resize(Img, displayImg, Size(0, 0), 0.5, 0.5);
 		imshow("Provided image", displayImg);
 		//imwrite("C:/Users/cedri/Pictures/Bot-Img_and_grid.png", displayImg);
 
@@ -310,72 +261,9 @@ vector<vector<int>> scanRessource(HWND dofusScreen)
 
 	}
 
-	return outputTab;
+	return null_output;
 
-	
+
 
 }
 
-/*
-
-Bool isCursorBlue(Mat roi, threshold)
-{
-
-	Score = cv.CountNonZero(ROI)
-
-		If score > threshold
-			Return true
-		Return false
-}
-
-
-void isHarvestable(vector &Tab_ressource)
-{
-
-for(  ressource in Tab_ressource)
-{
-//
-SetCursor(row, col)
-
-//capture de l'image du desktop
-HWND desktopImgHWND = FindWindowA(NULL,"nom fenêtre");
-Mat desktopImgMAT = hwnd2mat(desktopImgHWND)
-
-// on zoom sur la zone du curseur
-Mat regionCurseur = desktopImgMAT(range(row - 10, col - 10), range(row + 10, row - 10))
-
-// Si le curseur et rouge et pas bleu,
-if(not  scanPixNb(regionCurseur, THRESH_BLUE_CURSOR))
-{removeRessource(Tab_ressource, Ressource)}
-}
-}
-
-
-
-
-
-Main #######
-
-
-
-FOR each map
-
-DO
-
-DO
-
-Tab_ressource = scanRessource()
-
-isHarvestable(&Tab_ressource) //met à jour la liste des ressources en ne laissant celles récoltables                   
-
-IF Tab_ressource = empty
-
-THEN
-
-Break // on sort du while
-
-harvest(Tab_ressource)
-
-WHILE(1)
-
-DONE*/
