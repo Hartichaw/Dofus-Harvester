@@ -16,7 +16,7 @@ using namespace cv;
 
 
 //CONSTANTES A MODIFIER SI BESOIN
-const int DEBUG = 0; // 0 pour ne pas display les images
+const int DEBUG_DR = 0; // 0 pour ne pas display les images
 
 const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
 //const String TEMPLATE_ICON_PAYSAN = "C:/opencv/cursor_paysan.png";
@@ -102,7 +102,7 @@ Mat imgProvider(): Renvoie l'image de la fenêtre passée en paramètre sous forme 
 Mat imgProvider(int pressY, HWND dofusScreen) {
 
 	if(pressY == 1){PostMessage(dofusScreen, WM_KEYDOWN, 0x59, 0);} //press y
-	waitKey(600);
+	Sleep(600);
 	Mat desktopImgMAT = hwnd2mat(dofusScreen);
 	if (pressY == 1) {PostMessage(dofusScreen, WM_KEYUP, 0x59, 0); } //release y
 
@@ -216,7 +216,7 @@ POINT scanRessource(HWND dofusScreen)
 		output_pt.y = tabRessources[i][0] + 22;
 		
 		SetCursorPos(output_pt.x, output_pt.y);
-		waitKey(100);
+		Sleep(100);
 		regionCurseur = getCursor();
 		//imwrite(string{ "C:/Users/cedri/Pictures/curseur/Cursor" + to_string(i) + ".png"}, regionCurseur);
 
@@ -240,7 +240,7 @@ POINT scanRessource(HWND dofusScreen)
 	}
 
 	// Windows creation in debug mode
-	if (DEBUG == 1)
+	if (DEBUG_DR == 1)
 	{
 
 		for (int i = 0; i<outputTab.size(); i++)
@@ -260,6 +260,7 @@ POINT scanRessource(HWND dofusScreen)
 
 
 	}
+
 
 	return null_output;
 

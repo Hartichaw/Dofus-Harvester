@@ -51,7 +51,7 @@ void recolterRessourcesMap(HWND dofusScreen)
 			leftClick(posRessources.x, posRessources.y);
 		}
 		
-		waitKey(3000);
+		Sleep(3000);
 	}while (posRessources.x >= 0 && posRessources.y >= 0);
 
 	cout << "plus de ressources sur la map" << endl;
