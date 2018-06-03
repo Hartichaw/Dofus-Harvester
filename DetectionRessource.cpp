@@ -19,6 +19,11 @@ using namespace cv;
 const int DEBUG_DR = 0; // 0 pour ne pas display les images
 
 const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
+const String TEMPLATE_ICON_PECHEUR = "C:/Users/cedri/Pictures/cursor_pecheur.png";
+const String TEMPLATE_ICON_BUCHERON = "C:/Users/cedri/Pictures/cursor_bucheron.png";
+const String TEMPLATE_ICON_ALCHI = "C:/Users/cedri/Pictures/cursor_alchi.png";
+
+
 //const String TEMPLATE_ICON_PAYSAN = "C:/opencv/cursor_paysan.png";
 
 //const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.15:0";
@@ -109,6 +114,52 @@ Mat imgProvider(int pressY, HWND dofusScreen) {
 	return desktopImgMAT;
 }
 
+
+/*
+checkCurseur(): true : curseur correspond à une ressource recoltable
+*/
+bool checkCurseur(Mat curseur)
+{
+	Mat diffPaysan, diffPecheur, diffBucheron, diffAlchi;
+
+	const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
+	const String TEMPLATE_ICON_PECHEUR = "C:/Users/cedri/Pictures/cursor_pecheur.png";
+	const String TEMPLATE_ICON_BUCHERON = "C:/Users/cedri/Pictures/cursor_bucheron.png";
+	const String TEMPLATE_ICON_ALCHI = "C:/Users/cedri/Pictures/cursor_alchi.png";
+
+
+	Mat curseurPaysan = imread(TEMPLATE_ICON_PAYSAN, CV_LOAD_IMAGE_COLOR);
+	Mat curseurPecheur = imread(TEMPLATE_ICON_PECHEUR, CV_LOAD_IMAGE_COLOR);
+	Mat curseurBucheron = imread(TEMPLATE_ICON_BUCHERON, CV_LOAD_IMAGE_COLOR);
+	Mat curseurAlchi = imread(TEMPLATE_ICON_ALCHI, CV_LOAD_IMAGE_COLOR);
+
+	// on verifie que les curseur aient la meme dimension
+	if (curseur.rows != curseurPaysan.rows || curseur.cols != curseurPaysan.cols)
+		return false;
+
+	subtract(curseurPaysan, curseur, diffPaysan);
+	subtract(curseurPecheur, curseur, diffPecheur);
+	subtract(curseurBucheron, curseur, diffBucheron);
+	subtract(curseurAlchi, curseur, diffAlchi);
+
+		
+	if((int)sum(sum(diffPaysan))[0] == 0)
+		return true;
+
+	if ((int)sum(sum(diffPecheur))[0] == 0)
+		return true;
+
+	if ((int)sum(sum(diffBucheron))[0] == 0)
+		return true;
+
+	if ((int)sum(sum(diffAlchi))[0] == 0)
+		return true;
+
+	return false;
+
+
+
+}
 /*
 POINT scanRessource(): Renvoi un point représentant la position d'une ressource récoltable
 */
@@ -141,7 +192,7 @@ POINT scanRessource(HWND dofusScreen)
 
 	//Matrices pour stocker les resultats intermediraires
 	Mat  rsz_img, thresh_img, morpho_output, mask, displayImg, regionCurseur;
-	Mat ImgRecolte = imread(TEMPLATE_ICON_PAYSAN, CV_LOAD_IMAGE_COLOR);
+	
 
 	//Point en sortie
 	POINT output_pt;
@@ -219,23 +270,12 @@ POINT scanRessource(HWND dofusScreen)
 		Sleep(100);
 		regionCurseur = getCursor();
 		//imwrite(string{ "C:/Users/cedri/Pictures/curseur/Cursor" + to_string(i) + ".png"}, regionCurseur);
-
-		if (ImgRecolte.rows == regionCurseur.rows && ImgRecolte.cols == regionCurseur.cols)
+		if (checkCurseur(regionCurseur))
 		{
-			subtract(ImgRecolte, regionCurseur, regionCurseur);
-			scoredifference = (int)sum(sum(regionCurseur))[0];
-
-			if (scoredifference == 0)
-			{
-				//cout << "pssage pushback // x = " << tabRessources[i][1] << "    y = " << tabRessources[i][0] << endl;
-
-				return output_pt;
-			}
+			//cout << "pssage pushback // x = " << tabRessources[i][1] << "    y = " << tabRessources[i][0] << endl;
+			return output_pt;
 		}
-		else
-		{
-			cout << "Les curseurs n'ont pas la même dimension" << endl;
-		}
+
 		
 	}
 
