@@ -1,5 +1,6 @@
 
 void leftClick(int x, int y);
+void leftClickResPos(POINT pt, int delay);
 
 void moveMapUp();
 void moveMapLeft();

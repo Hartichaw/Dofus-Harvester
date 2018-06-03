@@ -12,6 +12,15 @@ void leftClick(int x, int y)
     mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 }
 
+void leftClickResPos(POINT pt, int delay)	// Click gauche puis reset de la position du curseur à (0, 0) et délai
+{
+	leftClick(pt.x, pt.y);
+	Sleep(delay / 2);
+	SetCursorPos(0, 0);
+	Sleep(delay / 2);
+}
+
+
 /** CLIC HAVRE SAC **/
 
 void clickHavreSac()
