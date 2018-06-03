@@ -68,15 +68,13 @@ Mat hwnd2mat(HWND hwnd)
 
 /****************** DETECTION COULEUR ******************/
 
-vector<POINT> detectionColorArray(Mat imageBGR, Scalar lowerb, Scalar upperb, int x1, int x2, int y1, int y2, int threshold, bool DEBUG)
+vector<POINT> detectionColorArray(Mat imageBGR, Scalar lowerb, Scalar upperb, int x1, int x2, int y1, int y2, int threshold, int morphoOp, bool DEBUG)
 {
 	Mat imageResizeBGR;
 	Mat maskImage;
-	Mat mask1, mask2, mask3;
-	//int nbPixel;
+	Mat mask1, mask2;
 
 	imageResizeBGR = imageBGR(Range(y1, y2), Range(x1, x2));
-	//inRange(imageResizeBGR, lowerb, upperb, maskImage);
 
 	inRange(imageResizeBGR, lowerb, upperb, mask1);
 	int nbPixel = countNonZero(mask1);
@@ -86,16 +84,19 @@ vector<POINT> detectionColorArray(Mat imageBGR, Scalar lowerb, Scalar upperb, in
 		return emptyVector;
 	}
 
-	// MODIF
-
+	// erosion/ dilatation, supprimes les petits pixels assimilies a du bruit
 	Mat kernel_erode = getStructuringElement(MORPH_ELLIPSE, Size(2, 2));
 	Mat kernel_dilate = getStructuringElement(MORPH_ELLIPSE, Size(10, 10));
-
-	// erosion/ dilatation, supprimes les petits pixels assimilies a du bruit
-	morphologyEx(mask1, maskImage, MORPH_ERODE, kernel_erode);
-	//morphologyEx(mask2, maskImage, MORPH_DILATE, kernel_dilate);
-
-	// Modif
+	if (morphoOp == 0) {
+		maskImage = mask1;
+	}
+	else if (morphoOp == 1) {
+		morphologyEx(mask1, maskImage, MORPH_ERODE, kernel_erode);
+	}
+	else if (morphoOp == 2) {
+		morphologyEx(mask1, mask2, MORPH_ERODE, kernel_erode);
+		morphologyEx(mask2, maskImage, MORPH_DILATE, kernel_dilate);
+	}
 
 /// Find contours   
 	vector<vector<Point>> contours;
@@ -196,18 +197,14 @@ bool detectionColorPos(Mat imageBGR, Scalar lowerb, Scalar upperb, int x1, int x
 
 		return true;
 	}
-	else {
-		return false;
-	}
 
+	return false;
 }
 
-/****************** DETECTION POINT LE PLUS PROCHE ******************/
+/****************** DETECTION POINT LE PLUS PROCHE DE LA CIBLE ******************/
 
-bool findNearestPoint(HWND dofusScreen, POINT posEnnemi, vector<POINT> posArray, POINT & nearestPoint, int threshold)
+bool findNearestPoint(POINT posCible, vector<POINT> posArray, POINT & nearestPoint, int threshold, int detectMemeCase)
 {
-	int i;
-
 	if (posArray.size() == 0) {
 		return false;
 	}
@@ -215,148 +212,22 @@ bool findNearestPoint(HWND dofusScreen, POINT posEnnemi, vector<POINT> posArray,
 	nearestPoint.x = 0;
 	nearestPoint.y = 0;
 
-	for (i = 0; i < posArray.size(); i++) {		// Déplacement le plus proche possible de l'ennemi
+	for (int i = 0; i < posArray.size(); i++) {		// Déplacement le plus proche possible de l'ennemi
 
-												// Si point plus proche
-		if (abs(posArray[i].x - posEnnemi.x) + abs(posArray[i].y - posEnnemi.y) < abs(nearestPoint.x - posEnnemi.x) + abs(nearestPoint.y - posEnnemi.y)) {
+		// Si point plus proche
+		if (abs(posArray[i].x - posCible.x) + abs(posArray[i].y - posCible.y) < abs(nearestPoint.x - posCible.x) + abs(nearestPoint.y - posCible.y)) {
 
-			if (abs(posArray[i].x - posEnnemi.x) >= threshold && abs(posArray[i].y - posEnnemi.y) >= threshold) {	// on exclue les cases en diagonale (à 1 case) du mob
+			if (abs(posArray[i].x - posCible.x) >= threshold && abs(posArray[i].y - posCible.y) >= threshold) {		// possibilité d'exclure les cases en diagonale de la cible en mettant threshold à 15
 				nearestPoint = posArray[i];
+			}
+			else if (detectMemeCase == 1) {
+
+				if (abs(posArray[i].x - posCible.x) <= 25 && abs(posArray[i].y - posCible.y) <= 15) {		// détection sur la même case que la cible (pratique pour les sorts)
+					nearestPoint = posArray[i];
+				}
 			}
 		}
 	}
 
 	return true;
-}
-
-/****************** DETECTION COMBAT ******************/
-
-vector<POINT> detectionSort(HWND dofusScreen)	// détecte la grille de sort
-{
-	Mat imageBGR;
-	imageBGR = hwnd2mat(dofusScreen);
-
-	Sleep(500);
-
-	vector<POINT> posArray = detectionColorArray(imageBGR, Scalar(143, 41, 24), Scalar(163, 61, 44), 278, 1257, 14, 694, 20, false);	
-
-	return posArray;
-}
-
-vector<POINT> detectionDeplacement(HWND dofusScreen)	// détecte la grille de déplacement
-{
-	Mat imageBGR;
-	imageBGR = hwnd2mat(dofusScreen);
-
-	Sleep(500);
-
-	vector<POINT> posArray = detectionColorArray(imageBGR, Scalar(60, 161, 112), Scalar(80, 181, 132), 278, 1257, 14, 694, 500, false);	
-	
-	return posArray;
-}
-
-bool detectionDebutCombat(HWND dofusScreen, bool & modeCreature, bool & modeTactique)
-{
-	Mat imageBGR = hwnd2mat(dofusScreen);
-	POINT posCible;
-
-	if (detectionColorPos(imageBGR, Scalar(0, 230, 85), Scalar(50, 255, 215), 1094, 1295, 686, 775, posCible, 1000, false)) {	// detection Debut Combat
-		
-	//	Sleep(500);
-	//	leftClick(posCible.x, posCible.y);	
-		Sleep(500);
-
-		// Détection du modre créature et tactique
-		if (detectionColorPos(imageBGR, Scalar(150, 150, 150), Scalar(180, 180, 180), 1162, 1183, 775, 800, posCible, 20, false)) {	// detection mode tactique
-	//		Sleep(500);
-	//		leftClick(posCible.x, posCible.y);
-	//		Sleep(500);
-			modeTactique = true;
-		}
-		Sleep(500);
-		if (detectionColorPos(imageBGR, Scalar(150, 150, 150), Scalar(180, 180, 180), 1186, 1207, 775, 800, posCible, 20, false)) {	// detection mode créature
-	//		Sleep(500);
-	//		leftClick(posCible.x, posCible.y);
-	//		Sleep(500);
-			modeCreature = true;
-		}
-	
-	//	namedWindow("image", WINDOW_NORMAL/*WINDOW_AUTOSIZE*/); // Create a window for display.
-	//	imshow("image", imageBGR); // Show our image inside it.
-	//	waitKey(0); // Wait for a keystroke in the window
-		
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
-bool detectionCombat(HWND dofusScreen, bool & finCombat, bool & finTour)
-{
-	Mat imageBGR;
-	POINT posCible;
-
-	imageBGR = hwnd2mat(dofusScreen);
-	
-	if (detectionColorPos(imageBGR, Scalar(0, 230, 85), Scalar(50, 255, 215), 573, 999, 336, 601, posCible, 1500, false)) {	// fin combat
-	//	Sleep(500);
-	//	leftClick(posCible.x, posCible.y);
-	//	Sleep(500);
-		finCombat = true;
-		return true;
-	}
-
-	Sleep(500);
-
-	//if (detectionColorPos(imageBGR, Scalar(0, 230, 85), Scalar(50, 255, 215), 1094, 1295, 336, 775, posCible, 1000, false)) {	// fin tour
-	if (detectionColorPos(imageBGR, Scalar(0, 230, 85), Scalar(50, 255, 215), 1094, 1295, 686, 775, posCible, 1000, false)) {	// fin tour
-	/*	Sleep(500);
-		leftClick(posCible.x, posCible.y);
-		Sleep(500);
-		*/
-		finTour = true;
-	}
-
-	return false;
-
-	// debug :
-//	namedWindow("fin combat", WINDOW_NORMAL/*WINDOW_AUTOSIZE*/); // Create a window for display.
-//	imshow("fin combat", imageBGR); // Show our image inside it.
-//	waitKey(0); // Wait for a keystroke in the window
-	//system("pause");
-}
-
-
-bool detectionPositions(HWND dofusScreen, POINT & posJoueur, POINT & posEnnemi)	// détecte la pos du joueur et de l'ennemi
-{
-	Mat imageBGR;
-	imageBGR = hwnd2mat(dofusScreen);
-	
-	Sleep(500);
-
-	if (detectionColorPos(imageBGR, Scalar(200, 0, 0), Scalar(255, 20, 20), 278, 1257, 14, 694, posEnnemi, 50, false)) {	// ennemi
-		
-		Sleep(500);
-
-		if (detectionColorPos(imageBGR, Scalar(0, 0, 200), Scalar(20, 20, 255), 278, 1257, 14, 694, posJoueur, 50, false)) {	// Joueur
-			return true;
-		}
-	}
-
-	return false;
-}
-
-/****************** DETECTION POP-UP ******************/
-
-vector<POINT> detectionPopUps(HWND dofusScreen)	// détecte la grille de déplacement
-{
-	Mat imageBGR;
-	imageBGR = hwnd2mat(dofusScreen);
-
-	Sleep(500);
-
-	vector<POINT> posArray = detectionColorArray(imageBGR, Scalar(0, 221, 181), Scalar(10, 241, 201), 100, 1257, 100, 694, 500, false);
-
-	return posArray;
 }

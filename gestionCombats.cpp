@@ -1,163 +1,264 @@
 #include <iostream>
 #include <vector>
 #include <windows.h>
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include "gestionDeplacement.h"
 #include "gestionCombats.h"
 #include "gestionImage.h"
 
-using namespace std;
+#define COEFF_PO_SORT 55
+#define COEFF_ZONE_SORT 30
 
-bool gestionTourJoueur(HWND dofusScreen)
+using namespace std;
+using namespace cv;
+
+
+/****************** DETECTION COMBAT ******************/
+// Certaines fonctions ne font pas grand chose mais c'est pratique pour se repérer avec le nom des fonctions ;)
+
+vector<POINT> detectionSort(HWND dofusScreen)	// détecte la grille de sort
 {
-	// Détection de la pos des ennemis
-	// Détection de la possibilité de déplacement su joueur
-	// Déplacement si nécessaire
+	Mat imageBGR = hwnd2mat(dofusScreen);
+
+	vector<POINT> posArray = detectionColorArray(imageBGR, Scalar(143, 41, 24), Scalar(163, 61, 44), 278, 1257, 14, 694, 20, 1, false);
+
+	return posArray;
+}
+
+vector<POINT> detectionDeplacement(HWND dofusScreen)	// détecte la grille de déplacement
+{
+	Mat imageBGR = hwnd2mat(dofusScreen);
+
+	vector<POINT> posArray = detectionColorArray(imageBGR, Scalar(60, 161, 112), Scalar(80, 181, 132), 278, 1257, 14, 694, 500, 1, false);
+
+	return posArray;
+}
+
+vector<POINT> detectionPosEnnemis(HWND dofusScreen)		// détecte la posiiton de plusieurs ennemis
+{
+	Mat	imageBGR = hwnd2mat(dofusScreen);
+
+	vector<POINT> posArray = detectionColorArray(imageBGR, Scalar(200, 0, 0), Scalar(255, 20, 20), 278, 1257, 14, 733, 25, 0, false);
+
+	return posArray;
+}
+
+bool detectionPosJoueur(HWND dofusScreen, POINT & posJoueur)	// détecte la pos du joueur
+{
+	Mat	imageBGR = hwnd2mat(dofusScreen);
+
+	if (detectionColorPos(imageBGR, Scalar(0, 0, 200), Scalar(20, 20, 255), 278, 1257, 14, 733, posJoueur, 25, false)) {	// Joueur
+		return true;
+	}
+
+	return false;
+}
+
+bool detectionDebutCombat(HWND dofusScreen, bool & modeCreature, bool & modeTactique)
+{
+	POINT posCible;
+	Mat imageBGR = hwnd2mat(dofusScreen);
+
+	if (detectionColorPos(imageBGR, Scalar(0, 230, 85), Scalar(50, 255, 215), 1094, 1295, 686, 775, posCible, 1000, false)) {	// detection Debut Combat
+
+		Sleep(500);
+		imageBGR = hwnd2mat(dofusScreen);		// Re-capture de l'écran pour être certain que l'écran de combat soit totalement chargé
+
+		if (detectionColorPos(imageBGR, Scalar(150, 150, 150), Scalar(180, 180, 180), 1162, 1183, 775, 800, posCible, 20, false)) {	// detection mode tactique
+			modeTactique = true;
+		}
+		else {
+			modeTactique = false;
+		}
+
+		if (detectionColorPos(imageBGR, Scalar(150, 150, 150), Scalar(180, 180, 180), 1186, 1207, 775, 800, posCible, 20, false)) {	// detection mode créature
+
+			modeCreature = true;
+		}
+		else {
+			modeCreature = false;
+		}
+		return true;
+	}
+
+	return false;
+}
+
+bool detectionCombat(HWND dofusScreen, bool & finCombat, bool & finTour, POINT & posFinCombat)
+{
+	POINT posCible;
+	Mat imageBGR = hwnd2mat(dofusScreen);
+
+	if (detectionColorPos(imageBGR, Scalar(0, 230, 85), Scalar(50, 255, 215), 603, 893, 449, 708, posFinCombat, 1500, false)) {	// fin combat
+		finCombat = true;
+		return true;
+	}
+	else {
+		finCombat = false;
+	}
+
+	if (detectionColorPos(imageBGR, Scalar(0, 230, 85), Scalar(50, 255, 215), 1094, 1295, 686, 775, posCible, 1000, false)) {	// fin tour
+		finTour = true;
+	}
+	else {
+		finTour = false;
+	}
+
+	return false;
+
+}
+
+
+/****************** GESTION COMBAT ******************/
+
+bool gestionAttaque(HWND dofusScreen, int sort, int poSort, int zoneSort, POINT posJoueur, POINT posEnnemi)
+{
+	POINT nearestPoint;
+	POINT posAnnulSort = { 100, 100 };
+
+	if (abs(posJoueur.x - posEnnemi.x) + abs(posJoueur.y - posEnnemi.y) < poSort * COEFF_PO_SORT) {	// Si on est à côté du monstre on essaie de taper
+
+		switch (sort) {			// Sélection du sort
+
+		case 0: leftClick(798, 751); break;	// sort 0 = CAC
+		case 1: leftClick(827, 757); break;
+		case 2: leftClick(866, 755); break;
+		case 3: leftClick(900, 754); break;
+		case 4: leftClick(933, 754); break;
+		case 5: leftClick(966, 754); break;
+		default: break;
+		}
+
+		Sleep(1000);
+
+		vector<POINT> posSort = detectionSort(dofusScreen);
+
+		if (findNearestPoint(posEnnemi, posSort, nearestPoint, 15, 1)) {		// 15 pour éliminer les cases en diagonale du monstre
+			
+			if (abs(posEnnemi.x - nearestPoint.x) + abs(posEnnemi.y - nearestPoint.y) < COEFF_ZONE_SORT * zoneSort) {		// Si on peut taper, on tape !!!
+				leftClickResPos(nearestPoint, 2000);
+				return true;			// return true si on a frappé l'ennemi
+			}
+		}
+
+		leftClickResPos(posAnnulSort, 300);		// Si imposible d'attaquer on click en 100, 100 pour annuler le sort
+	}
+
+	return false;
+}
+
+bool gestionAction(HWND dofusScreen, int sort, int poSort, int zoneSort)
+{
+	// Param entrée : sort=0 => CAC, sort=1 => sort 1, etc...
+	//				  poSort = PO du sort dans le jeu
+	//				  zoneSort=1 => pas de zone, zoneSort=2 => croix de 1 case, etc...
+
+	// Algo de la fonction :
+	// Détection de la pos des ennemis et du joueur
+	// Attaque si possible, puis return true
+	// Sinon déplacement puis attaque si possible
 
 	POINT posJoueur;
 	POINT posEnnemi;
 	POINT nearestPoint;
 
-	//int i;
-
-	static int cptDebug = 0;
-
-	cptDebug++;
-
-	cout << "cpt = " << cptDebug << endl;
-
-	if (!detectionPositions(dofusScreen, posJoueur, posEnnemi)) {	// détecte la pos du joueur et de l'ennemi
-		//return false;
-	}
-
-	cout << abs(posJoueur.x - posEnnemi.x) << "     " << abs(posJoueur.y - posEnnemi.y) << endl;
-
-	if (abs(posJoueur.x - posEnnemi.x) > 50 || abs(posJoueur.y - posEnnemi.y) > 50) {		// Si on est pas à côté de l'ennemi, on se déplace
-
-		vector<POINT> posDeplacement = detectionDeplacement(dofusScreen);
-		
-		cout << "ici 1 " << endl;
-
-		if (!findNearestPoint(dofusScreen, posEnnemi, posDeplacement, nearestPoint, 11)) {
-			cout << "non fin :(" << endl;
-			Sleep(500);
-			leftClick(1190, 764);	// clic fin tour
-			return false;
-		}
-
-		cout << "Nearest point : " << nearestPoint.x << "  " << nearestPoint.y << endl;
-		Sleep(500);
-		leftClick(nearestPoint.x, nearestPoint.y);
-		Sleep(500);
-		SetCursorPos(100, 100);
-		Sleep(3000);
-	}
-	Sleep(2000);
-
-	// Attaque
-	//int KEY = 0x22;
-	//PostMessage(dofusScreen, WM_KEYDOWN, 0x22, 0);
-	Sleep(200);
-	leftClick(865, 748);					// Les touches ne marchent pas, pourquoi ???
-	//PostMessage(dofusScreen, WM_KEYUP, 0x22, 0);
-	Sleep(200);
-
-	vector<POINT> posSort = detectionSort(dofusScreen);
-
-	if (findNearestPoint(dofusScreen, posEnnemi, posSort, nearestPoint, 0)) {
-
-		cout << "weigh = " << abs(posEnnemi.x - nearestPoint.x) + abs(posEnnemi.y - nearestPoint.y) << endl;
-
-		if (abs(posEnnemi.x - nearestPoint.x) + abs(posEnnemi.y - nearestPoint.y) < 25) {
-
-			Sleep(500);
-			leftClick(nearestPoint.x, nearestPoint.y);
-			Sleep(1500);
-		}
-	}
-	else {
-		Sleep(500);
-		leftClick(1190, 764);	// clic fin tour
+	if (!detectionPosJoueur(dofusScreen, posJoueur)) {	// détecte la pos du joueur
 		return false;
 	}
 
+	//Sleep(200);
+	vector<POINT> posEnnemis = detectionPosEnnemis(dofusScreen);		// détecte la pos des ennemis
 
-/*	// pour debug :
-	for (i = 0; i < posDeplacement.size(); i++) {
-		cout << "X = " << posDeplacement[i].x << "   Y = " << posDeplacement[i].y << endl;
-		SetCursorPos(posDeplacement[i].x, posDeplacement[i].y);
-		Sleep(300);
+	if (!findNearestPoint(posJoueur, posEnnemis, posEnnemi, 0, 1)) {		// détecte l'ennemi le plus proche
+		return false;
 	}
-	cout << "Xe = " << posEnnemi.x << "   Ye = " << posEnnemi.y << endl;
-	cout << "Xj = " << posJoueur.x << "   Yj = " << posJoueur.y << endl;
-	cout << "Xj-Xe = " << posJoueur.x - posEnnemi.x << "   Yj-Ye = " << posJoueur.y - posEnnemi.y << endl;
 
-	*/
+	if (gestionAttaque(dofusScreen, sort, poSort, zoneSort, posJoueur, posEnnemi)) {		// Si on peut attaquer sans bouger, on le fait et return true
+		return true;	// Si attaque réussie, return true
+	}
+	
+	vector<POINT> posDeplacement = detectionDeplacement(dofusScreen);						// Sinon on détecte la possibilité de déplacement
+		
+	if (findNearestPoint(posEnnemi, posDeplacement, nearestPoint, 15, 0)) {		// si on peut se déplacer
+	
+		leftClickResPos(nearestPoint, (abs(posJoueur.x - nearestPoint.x) + abs(posJoueur.y - nearestPoint.y)) * 15 + 1500);	// Délai déplacment perso
+		posJoueur = nearestPoint;		// MAJ de la pos du joueur
 
+		if (gestionAttaque(dofusScreen, sort, poSort, zoneSort, posJoueur, posEnnemi)) {		// Attaque
+			return true;	// Si attaque réussie, return true
+		}
+	}
 
-	Sleep(1000);
-	leftClick(1190, 764);	// clic fin tour
-
-	return true;
+	return false;
 }
+
+// A modifier en fonction du besoin
+void gestionTourJoueur(HWND dofusScreen)
+{
+	static int tour = 0;
+	tour++;		// numéro du tour
+
+	Sleep(500);
+	gestionAction(dofusScreen, 2, 5, 2);
+	Sleep(2000);
+	gestionAction(dofusScreen, 2, 5, 2);	
+}
+
 
 bool gestionCombat(HWND dofusScreen)
 {
 	bool finCombat = false, finTour = false;
 	bool modeCreature = false, modeTactique = false;
-	DWORD t1, t2;
-	
-	cout << "fonction combat" << endl;
+	POINT posFinCombat;
+	POINT posDebutCombat = { 1190, 764 };
+	POINT posFinTour = { 1190, 764 };
+	POINT posModeCreature = { 1195, 805 };
+	POINT posModeTactique = { 1175, 805 };
+
+	//cout << "fonction combat" << endl;
 
 	if (detectionDebutCombat(dofusScreen, modeCreature, modeTactique))		// Début de combat détecté
 	{
 //		cout << "Debut combat detecte" << endl;
-		//Sleep(1000);
+		Sleep(1500);
 
-		// Clic mode créature et tactique si besoin
 		if (modeCreature) {
-			leftClick(1195, 805);
-			Sleep(1000);
+			leftClickResPos(posModeCreature, 1500);
 		}
+
 		if (modeTactique) {
-			leftClick(1175, 805);
-			Sleep(1000);
+			leftClickResPos(posModeTactique, 1500);
 		}
 		
-		leftClick(1190, 764);	// clic Prêt combat
-		
-		Sleep(500);		
-		SetCursorPos(100, 100);
-		Sleep(500);
+		leftClickResPos(posDebutCombat, 1000);
+		Sleep(2500);
 
 		while (true)
 		{
-			detectionCombat(dofusScreen, finCombat, finTour);
+			detectionCombat(dofusScreen, finCombat, finTour, posFinCombat);
 
 			if (finCombat)		// fin de combat détecté
 			{
-				//Sleep(2000);
-				leftClick(786, 497);
 				Sleep(500);
-				SetCursorPos(100, 100);
-				Sleep(1500);
-				cout << "Fin de combat detecte" << endl;
+				leftClickResPos(posFinCombat, 2000);
 				return true;
 			}
-			else if (finTour)	// Si fin tour est détecté, alors c'est au tour su joueur
+			else if (finTour)	// Si fin tour est détecté, alors c'est au tour du joueur
 			{
-				Sleep(500);
-				//t1 = GetTickCount();
 				gestionTourJoueur(dofusScreen);
-				//t2 = GetTickCount();
-				//cout << "Temps execution : " << t2 - t1 << " ms" << endl;
-				Sleep(500);
-				SetCursorPos(0, 0);
-				Sleep(2500);
+				leftClickResPos(posFinTour, 2000);
 			}
 
 			Sleep(2000);
 		}
 	}
+
 	return false;
 }
 
