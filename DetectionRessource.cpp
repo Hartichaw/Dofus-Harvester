@@ -266,6 +266,8 @@ POINT scanRessource(HWND dofusScreen)
 		output_pt.x = tabRessources[i][1];
 		output_pt.y = tabRessources[i][0] + 22;
 		
+		SetCursorPos(0, 0);
+		Sleep(10);
 		SetCursorPos(output_pt.x, output_pt.y);
 		Sleep(100);
 		regionCurseur = getCursor();
