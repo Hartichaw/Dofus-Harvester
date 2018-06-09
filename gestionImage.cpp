@@ -231,3 +231,74 @@ bool findNearestPoint(POINT posCible, vector<POINT> posArray, POINT & nearestPoi
 
 	return true;
 }
+
+/*
+Mat getCursor(): Renvoie l'image du curseur courant sous forme d'openCV:MAT
+*/
+Mat getCursor()
+{
+
+	Mat OutputCursorImg; // matrice de  sortie
+
+						 // On récupère l'environnement de la fenêtre
+	HDC hdcScreen = GetDC(NULL);
+	HDC hdcMem = CreateCompatibleDC(hdcScreen);
+
+	// Création de la bitmap et du canvas dans lequel on va recuperer l'image.
+	HBITMAP hbmCanvas = CreateCompatibleBitmap(hdcScreen, 256, 256);
+	HGDIOBJ hbmOld = SelectObject(hdcMem, hbmCanvas);
+
+	// Get information about the global cursor.
+	CURSORINFO ci;
+	ci.cbSize = sizeof(ci);
+	GetCursorInfo(&ci);
+
+	// information de l'icon (conversion HBM -> MAT)
+	ICONINFO ii = { 0 };
+	BITMAP bm;
+	GetIconInfo(ci.hCursor, &ii);
+	GetObject(ii.hbmMask, sizeof(BITMAP), &bm);
+
+	// On transfère les données du curseur dans le canvas.
+	DrawIcon(hdcMem, 0, 0, ci.hCursor);
+
+
+
+	//Si les informmation remontées sont cohérentes
+	if (bm.bmHeight > 0 && bm.bmWidth > 0)
+	{
+
+		Mat image(bm.bmHeight, bm.bmWidth, CV_8UC3);
+		// On parcourt chaque pixel pour mettre à jour la matrice de sortie
+		for (int i = 0; i < bm.bmHeight; i++) {
+			for (int j = 0; j < bm.bmWidth; j++) {
+
+				COLORREF c = GetPixel(hdcMem, i, j);
+
+				image.at<cv::Vec3b>(i, j)[0] = (int)GetBValue(c);
+				image.at<cv::Vec3b>(i, j)[1] = (int)GetGValue(c);
+				image.at<cv::Vec3b>(i, j)[2] = (int)GetRValue(c);
+
+			}
+		}
+		OutputCursorImg = image;
+	}
+
+
+	return OutputCursorImg;
+}
+
+
+/*
+Mat imgProvider(): Renvoie l'image de la fenêtre passée en paramètre sous forme d'openCV:MAT
+pressY : si mis à un, capture l'image en appuyant sur Y
+*/
+Mat imgProvider(int pressY, HWND dofusScreen) {
+
+	if (pressY == 1) { PostMessage(dofusScreen, WM_KEYDOWN, 0x59, 0); } //press y
+	Sleep(600);
+	Mat desktopImgMAT = hwnd2mat(dofusScreen);
+	if (pressY == 1) { PostMessage(dofusScreen, WM_KEYUP, 0x59, 0); } //release y
+
+	return desktopImgMAT;
+}

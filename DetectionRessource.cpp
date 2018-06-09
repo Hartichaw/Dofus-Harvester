@@ -9,161 +9,18 @@
 #include <Winuser.h>
 
 #include "gestionImage.h"
+#include "DetectionRessource.h"
 
 using namespace std;
 using namespace cv;
 
 
 
-//CONSTANTES A MODIFIER SI BESOIN
-const int DEBUG_DR = 0; // 0 pour ne pas display les images
-
-const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
-const String TEMPLATE_ICON_PECHEUR = "C:/Users/cedri/Pictures/cursor_pecheur.png";
-const String TEMPLATE_ICON_BUCHERON = "C:/Users/cedri/Pictures/cursor_bucheron.png";
-const String TEMPLATE_ICON_ALCHI = "C:/Users/cedri/Pictures/cursor_alchi.png";
-
-
-//const String TEMPLATE_ICON_PAYSAN = "C:/opencv/cursor_paysan.png";
-
-//const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.15:0";
-//const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
-
-
-
-//CONSTANTES A PAS TOUCHER (sauf si tu sais ce que tu fais )
-const int SIZE_SEARCH_ZONE = 10;
-const int PRESS_Y = 1;
-const int DETECTION_THRESHOLD = 5;
-const int SIZE_RECT = 15;
-const Scalar RED = Scalar(5, 5, 255);
-const Scalar BLUE = Scalar(255, 5, 5);
-
-const float ROW_START_COEFF = 0.04074, ROW_STEP_COEFF = 0.04074, ROW_END_COEFF = 0.8055;
-const float COL_START_COEFF = 0.20520, COL_STEP_COEFF = 0.02227, COL_END_COEFF = 0.8437;
-
-
-
-/*
-Mat getCursor(): Renvoie l'image du curseur courant sous forme d'openCV:MAT
-*/
-Mat getCursor() 
-{
 	
-	Mat OutputCursorImg; // matrice de  sortie
-
-	// On récupère l'environnement de la fenêtre
-	HDC hdcScreen = GetDC(NULL);
-	HDC hdcMem = CreateCompatibleDC(hdcScreen);
-
-	// Création de la bitmap et du canvas dans lequel on va recuperer l'image.
-	HBITMAP hbmCanvas = CreateCompatibleBitmap(hdcScreen, 256, 256);
-	HGDIOBJ hbmOld = SelectObject(hdcMem, hbmCanvas);
-
-	// Get information about the global cursor.
-	CURSORINFO ci;
-	ci.cbSize = sizeof(ci);
-	GetCursorInfo(&ci);
-
-	// information de l'icon (conversion HBM -> MAT)
-	ICONINFO ii = { 0 };
-	BITMAP bm;
-	GetIconInfo(ci.hCursor, &ii);
-	GetObject(ii.hbmMask, sizeof(BITMAP), &bm);
-
-	// On transfère les données du curseur dans le canvas.
-	DrawIcon(hdcMem, 0, 0, ci.hCursor);
-	
-	
-
-	//Si les informmation remontées sont cohérentes
-	if (bm.bmHeight > 0 && bm.bmWidth > 0)
-	{
-		
-		Mat image(bm.bmHeight, bm.bmWidth, CV_8UC3);
-		// On parcourt chaque pixel pour mettre à jour la matrice de sortie
-		for (int i = 0; i < bm.bmHeight; i++) {
-			for (int j = 0; j < bm.bmWidth; j++) {
-
-				COLORREF c = GetPixel(hdcMem, i, j);
-				
-				image.at<cv::Vec3b>(i, j)[0] = (int)GetBValue(c);
-				image.at<cv::Vec3b>(i, j)[1] = (int)GetGValue(c);
-				image.at<cv::Vec3b>(i, j)[2] = (int)GetRValue(c);
-
-			}
-		}
-		OutputCursorImg = image;
-	}
-
-
-	return OutputCursorImg;
-}
-
 /*
-Mat imgProvider(): Renvoie l'image de la fenêtre passée en paramètre sous forme d'openCV:MAT
-					pressY : si mis à un, capture l'image en appuyant sur Y		
+POINT scanRessource(): Renvoi un point représentant la position de la première ressource récoltable détectée
 */
-Mat imgProvider(int pressY, HWND dofusScreen) {
-
-	if(pressY == 1){PostMessage(dofusScreen, WM_KEYDOWN, 0x59, 0);} //press y
-	Sleep(600);
-	Mat desktopImgMAT = hwnd2mat(dofusScreen);
-	if (pressY == 1) {PostMessage(dofusScreen, WM_KEYUP, 0x59, 0); } //release y
-
-	return desktopImgMAT;
-}
-
-
-/*
-checkCurseur(): true : curseur correspond à une ressource recoltable
-*/
-bool checkCurseur(Mat curseur)
-{
-	Mat diffPaysan, diffPecheur, diffBucheron, diffAlchi;
-
-	const String TEMPLATE_ICON_PAYSAN = "C:/Users/cedri/Pictures/cursor_paysan.png";
-	const String TEMPLATE_ICON_PECHEUR = "C:/Users/cedri/Pictures/cursor_pecheur.png";
-	const String TEMPLATE_ICON_BUCHERON = "C:/Users/cedri/Pictures/cursor_bucheron.png";
-	const String TEMPLATE_ICON_ALCHI = "C:/Users/cedri/Pictures/cursor_alchi.png";
-
-
-	Mat curseurPaysan = imread(TEMPLATE_ICON_PAYSAN, CV_LOAD_IMAGE_COLOR);
-	Mat curseurPecheur = imread(TEMPLATE_ICON_PECHEUR, CV_LOAD_IMAGE_COLOR);
-	Mat curseurBucheron = imread(TEMPLATE_ICON_BUCHERON, CV_LOAD_IMAGE_COLOR);
-	Mat curseurAlchi = imread(TEMPLATE_ICON_ALCHI, CV_LOAD_IMAGE_COLOR);
-
-	// on verifie que les curseur aient la meme dimension
-	if (curseur.rows != curseurPaysan.rows || curseur.cols != curseurPaysan.cols)
-		return false;
-
-	subtract(curseurPaysan, curseur, diffPaysan);
-	subtract(curseurPecheur, curseur, diffPecheur);
-	subtract(curseurBucheron, curseur, diffBucheron);
-	subtract(curseurAlchi, curseur, diffAlchi);
-
-		
-	if((int)sum(sum(diffPaysan))[0] == 0)
-		return true;
-
-	if ((int)sum(sum(diffPecheur))[0] == 0)
-		return true;
-
-	if ((int)sum(sum(diffBucheron))[0] == 0)
-		return true;
-
-	if ((int)sum(sum(diffAlchi))[0] == 0)
-		return true;
-
-	return false;
-
-
-
-}
-/*
-POINT scanRessource(): Renvoi un point représentant la position d'une ressource récoltable
-*/
-POINT scanRessource(HWND dofusScreen)
+POINT harvestManager::getRessourcePos()
 {
 
 	/*
@@ -176,7 +33,7 @@ POINT scanRessource(HWND dofusScreen)
 	Mat baseImg = imgProvider(0, dofusScreen);
 	Mat Img = imgProvider(PRESS_Y, dofusScreen); // pressing y
 
-												 // Variables nécessaires a la creation de la grille de points
+													// Variables nécessaires a la creation de la grille de points
 	int ROW_NB = Img.rows;
 	int COL_NB = Img.cols;
 
@@ -192,7 +49,7 @@ POINT scanRessource(HWND dofusScreen)
 
 	//Matrices pour stocker les resultats intermediraires
 	Mat  rsz_img, thresh_img, morpho_output, mask, displayImg, regionCurseur;
-	
+
 
 	//Point en sortie
 	POINT output_pt;
@@ -265,7 +122,7 @@ POINT scanRessource(HWND dofusScreen)
 	{
 		output_pt.x = tabRessources[i][1];
 		output_pt.y = tabRessources[i][0] + 22;
-		
+
 		SetCursorPos(0, 0);
 		Sleep(10);
 		SetCursorPos(output_pt.x, output_pt.y);
@@ -278,7 +135,7 @@ POINT scanRessource(HWND dofusScreen)
 			return output_pt;
 		}
 
-		
+
 	}
 
 	// Windows creation in debug mode
@@ -309,4 +166,48 @@ POINT scanRessource(HWND dofusScreen)
 
 
 }
+
+	
+
+/*
+checkCurseur(): true : curseur correspond à une ressource recoltable
+*/
+bool harvestManager::checkCurseur(Mat curseur)
+{
+	Mat diffPaysan, diffPecheur, diffBucheron, diffAlchi;
+
+	// on verifie que les curseur aient la meme dimension
+	if (curseur.rows != curseurPaysan.rows || curseur.cols != curseurPaysan.cols)
+	{
+		cout << "Les curseurs n'ont pas la même dimension" << endl;
+		return false;
+	}
+
+	subtract(curseurPaysan, curseur, diffPaysan);
+	subtract(curseurPecheur, curseur, diffPecheur);
+	subtract(curseurBucheron, curseur, diffBucheron);
+	subtract(curseurAlchi, curseur, diffAlchi);
+
+
+	if ((int)sum(sum(diffPaysan))[0] == 0)
+		return true;
+
+	if ((int)sum(sum(diffPecheur))[0] == 0)
+		return true;
+
+	if ((int)sum(sum(diffBucheron))[0] == 0)
+		return true;
+
+	if ((int)sum(sum(diffAlchi))[0] == 0)
+		return true;
+
+	return false;
+
+}
+
+
+
+
+
+
 

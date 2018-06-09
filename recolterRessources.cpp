@@ -41,10 +41,10 @@ void recolterRessourcesMap(HWND dofusScreen)
 	posRessources[4].y = 558;
 
 	*/
-
+	harvestManager recolteur = harvestManager(dofusScreen);
 	do		// Si aucune ressource n'est détectée
 	{
-		posRessources = scanRessource(dofusScreen);
+		posRessources = recolteur.getRessourcePos();
 		cout << "ressource located:" << posRessources.x << "," << posRessources.y << endl;
 		if (posRessources.x >= 0 && posRessources.y >= 0)
 		{
