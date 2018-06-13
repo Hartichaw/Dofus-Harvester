@@ -34,7 +34,7 @@ public:
 
 		dofusScreen = hWindow;
 	}
-	POINT getRessourcePos();
+	POINT getRessourcePos(POINT lastPoint);
 private:
 
 	//Attributs:
@@ -52,7 +52,12 @@ private:
 	const float COL_START_COEFF = 0.20520, COL_STEP_COEFF = 0.02227, COL_END_COEFF = 0.8437;
 
 	bool checkCurseur(cv::Mat curseur);
+	//bool sortPixels(std::vector<int>  &vecA, std::vector<int> &vecB);
+	//int distPt(POINT ptA, POINT ptB);
 };
+
+bool sortPixels(std::vector<int>  vecA, std::vector<int> vecB);
+int distPt(POINT ptA, POINT ptB);
 
 
 #endif

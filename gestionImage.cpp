@@ -302,3 +302,5 @@ Mat imgProvider(int pressY, HWND dofusScreen) {
 
 	return desktopImgMAT;
 }
+
+

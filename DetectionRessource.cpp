@@ -7,7 +7,7 @@
 #include <vector>
 #include <windows.h>
 #include <Winuser.h>
-
+#include <algorithm>
 #include "gestionImage.h"
 #include "DetectionRessource.h"
 
@@ -15,12 +15,27 @@ using namespace std;
 using namespace cv;
 
 
+/*
+sortPixels : trie le tableau en fonction de la distance avec le point de référence
+*/
+bool sortPixels(vector<int>  vecA, vector<int> vecB)
+{
+	return (vecA[2] < vecB[2]);
+}
+
+/*
+distPt distance entre deux POINT
+*/
+int distPt(POINT ptA, POINT ptB)
+{
+	return int(abs(ptA.x - ptB.x) + abs(ptA.y - ptB.y));
+}
 
 	
 /*
 POINT scanRessource(): Renvoi un point représentant la position de la première ressource récoltable détectée
 */
-POINT harvestManager::getRessourcePos()
+POINT harvestManager::getRessourcePos(POINT lastPoint)
 {
 
 	/*
@@ -57,7 +72,7 @@ POINT harvestManager::getRessourcePos()
 
 	//Tableau de sortie pour stocker les coordonnees des ressources
 	vector<vector<int>>  tabRessources, outputTab;
-	vector<int> RessCoordinates(2);
+	vector<int> RessCoordinates(3); //[x,y,distance avec lastpoint]
 
 	// seuils de couleurs necessaires pour detourer les ressources
 	//Scalar lower_color = Scalar(160, 190, 200);
@@ -107,6 +122,7 @@ POINT harvestManager::getRessourcePos()
 				//Si on a détecté un point on l'enregistre
 				RessCoordinates[0] = row;
 				RessCoordinates[1] = col;
+				RessCoordinates[2] = distPt(POINT{col,row}, lastPoint);
 				tabRessources.push_back(RessCoordinates);
 			}
 
@@ -116,7 +132,10 @@ POINT harvestManager::getRessourcePos()
 		}
 	}
 
-
+	// on trie les points pour vérifier les points proches en premier
+	std::sort(tabRessources.begin(), tabRessources.end(), sortPixels);
+	
+	
 	// Controle des points trouvés pour ne garder que les ressoruces récoltables
 	for (int i = 0; i<tabRessources.size(); i++)
 	{
@@ -204,8 +223,6 @@ bool harvestManager::checkCurseur(Mat curseur)
 	return false;
 
 }
-
-
 
 
 
