@@ -79,7 +79,12 @@ vector<POINT> detectionColorArray(Mat imageBGR, Scalar lowerb, Scalar upperb, in
 	inRange(imageResizeBGR, lowerb, upperb, mask1);
 	int nbPixel = countNonZero(mask1);
 
-	if (nbPixel < threshold) {			// if not enough pixel found
+	if (nbPixel < threshold) {			// if not enough pixel found and not in debug mode
+
+		if (DEBUG) {
+			cout << "Pas assez de pixels detectes" << endl;
+		}
+
 		vector<POINT> emptyVector(0);
 		return emptyVector;
 	}
@@ -98,13 +103,13 @@ vector<POINT> detectionColorArray(Mat imageBGR, Scalar lowerb, Scalar upperb, in
 		morphologyEx(mask2, maskImage, MORPH_DILATE, kernel_dilate);
 	}
 
-/// Find contours   
+	/// Find contours   
 	vector<vector<Point>> contours;
 	vector<Vec4i> hierarchy;
 	findContours(maskImage, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
 	vector<Point> posContours(hierarchy.size());
-	
+
 	int i;
 	int idx = 0;
 	unsigned int posX = 0, posY = 0;
@@ -112,10 +117,10 @@ vector<POINT> detectionColorArray(Mat imageBGR, Scalar lowerb, Scalar upperb, in
 
 	for (; idx >= 0; idx = hierarchy[idx][0])
 	{
-		const vector<Point>& pt = contours[idx];	
-		
+		const vector<Point>& pt = contours[idx];
+
 		posX = 0; posY = 0;
-		
+
 		for (i = 0; i < pt.size(); i++) {
 			posX += pt[i].x;
 			posY += pt[i].y;
@@ -145,7 +150,7 @@ vector<POINT> detectionColorArray(Mat imageBGR, Scalar lowerb, Scalar upperb, in
 		/// Draw contours
 		RNG rng(12345);
 		Mat drawing = Mat::zeros(maskImage.size(), CV_8UC3);
-		for (int i = 0; i< contours.size(); i++)
+		for (int i = 0; i < contours.size(); i++)
 		{
 			Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
 			drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
@@ -302,5 +307,3 @@ Mat imgProvider(int pressY, HWND dofusScreen) {
 
 	return desktopImgMAT;
 }
-
-

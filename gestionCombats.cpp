@@ -31,13 +31,24 @@ vector<POINT> detectionSort(HWND dofusScreen)	// détecte la grille de sort
 	return posArray;
 }
 
-vector<POINT> detectionDeplacement(HWND dofusScreen)	// détecte la grille de déplacement
+vector<POINT> detectionDeplacement(HWND dofusScreen, int theme)	// détecte la grille de déplacement
 {
+	Scalar minBGR_theme0 = Scalar(60, 161, 112);	// Herbe amakna
+	Scalar maxBGR_theme0 = Scalar(80, 181, 132);
+
+	Scalar minBGR_theme1 = Scalar(43, 140, 101);	// Astrub
+	Scalar maxBGR_theme1 = Scalar(63, 160, 121);
+
 	Mat imageBGR = hwnd2mat(dofusScreen);
 
-	vector<POINT> posArray = detectionColorArray(imageBGR, Scalar(60, 161, 112), Scalar(80, 181, 132), 278, 1257, 14, 694, 500, 1, false);
-
-	return posArray;
+	if (theme == 0) {	// Amakna herbe
+		vector<POINT> posArray = detectionColorArray(imageBGR, minBGR_theme0, maxBGR_theme0, 278, 1257, 14, 694, 500, 1, false);
+		return posArray;
+	}
+	else {//if (theme == 1) {	// Astrub
+		vector<POINT> posArray = detectionColorArray(imageBGR, minBGR_theme1, maxBGR_theme1, 278, 1257, 14, 694, 500, 1, false);
+		return posArray;
+	}
 }
 
 vector<POINT> detectionPosEnnemis(HWND dofusScreen)		// détecte la posiiton de plusieurs ennemis
@@ -114,6 +125,25 @@ bool detectionCombat(HWND dofusScreen, bool & finCombat, bool & finTour, POINT &
 
 }
 
+void detectionTheme(HWND dofusScreen, int & theme)
+{
+	POINT posCible;
+	Mat imageBGR = hwnd2mat(dofusScreen);
+
+	if (detectionColorPos(imageBGR, Scalar(107, 207, 192), Scalar(127, 227, 212), 278, 1257, 14, 733, posCible, 10000, false)) {	// Thème herbe amakna
+		//couleur detectee (BGR) : 117, 217, 202
+		// nb pixels detectés : 438697
+		theme = 0;
+	}
+	else if (detectionColorPos(imageBGR, Scalar(92, 186, 188), Scalar(112, 206, 208), 278, 1257, 14, 733, posCible, 10000, false)) {	// Thème Astrub
+	// couleur detectée : 102 196 198
+		theme = 1;
+	}
+	else {
+		cout << "Echec detection theme" << endl;
+		theme = 0;		// Par défaut
+	}
+}
 
 /****************** GESTION COMBAT ******************/
 
@@ -140,7 +170,7 @@ bool gestionAttaque(HWND dofusScreen, int sort, int poSort, int zoneSort, POINT 
 		vector<POINT> posSort = detectionSort(dofusScreen);
 
 		if (findNearestPoint(posEnnemi, posSort, nearestPoint, 15, 1)) {		// 15 pour éliminer les cases en diagonale du monstre
-			
+
 			if (abs(posEnnemi.x - nearestPoint.x) + abs(posEnnemi.y - nearestPoint.y) < COEFF_ZONE_SORT * zoneSort) {		// Si on peut taper, on tape !!!
 				leftClickResPos(nearestPoint, 2000);
 				return true;			// return true si on a frappé l'ennemi
@@ -160,6 +190,7 @@ bool gestionAction(HWND dofusScreen, int sort, int poSort, int zoneSort)
 	//				  zoneSort=1 => pas de zone, zoneSort=2 => croix de 1 case, etc...
 
 	// Algo de la fonction :
+	// Detection du thème
 	// Détection de la pos des ennemis et du joueur
 	// Attaque si possible, puis return true
 	// Sinon déplacement puis attaque si possible
@@ -168,31 +199,47 @@ bool gestionAction(HWND dofusScreen, int sort, int poSort, int zoneSort)
 	POINT posEnnemi;
 	POINT nearestPoint;
 
+	int theme;
+
+	//cout << "gestion action" << endl;
+
+	detectionTheme(dofusScreen, theme);
+
 	if (!detectionPosJoueur(dofusScreen, posJoueur)) {	// détecte la pos du joueur
+		cout << "echec pos joueur" << endl;
 		return false;
 	}
-
+	//cout << "succes pos joueur" << endl;
 	//Sleep(200);
 	vector<POINT> posEnnemis = detectionPosEnnemis(dofusScreen);		// détecte la pos des ennemis
 
 	if (!findNearestPoint(posJoueur, posEnnemis, posEnnemi, 0, 1)) {		// détecte l'ennemi le plus proche
+	//	cout << "echec pos ennemis" << endl;
 		return false;
 	}
+	//cout << "succes pos ennemis" << endl;
 
 	if (gestionAttaque(dofusScreen, sort, poSort, zoneSort, posJoueur, posEnnemi)) {		// Si on peut attaquer sans bouger, on le fait et return true
+	//	cout << "attaque reussie" << endl;
 		return true;	// Si attaque réussie, return true
 	}
-	
-	vector<POINT> posDeplacement = detectionDeplacement(dofusScreen);						// Sinon on détecte la possibilité de déplacement
-		
+	//cout << "attaque echouee" << endl;
+
+	vector<POINT> posDeplacement = detectionDeplacement(dofusScreen, theme);						// Sinon on détecte la possibilité de déplacement
+
 	if (findNearestPoint(posEnnemi, posDeplacement, nearestPoint, 15, 0)) {		// si on peut se déplacer
-	
+
+	//	cout << "on peut se deplacer" << endl;
+
 		leftClickResPos(nearestPoint, (abs(posJoueur.x - nearestPoint.x) + abs(posJoueur.y - nearestPoint.y)) * 15 + 1500);	// Délai déplacment perso
 		posJoueur = nearestPoint;		// MAJ de la pos du joueur
 
 		if (gestionAttaque(dofusScreen, sort, poSort, zoneSort, posJoueur, posEnnemi)) {		// Attaque
 			return true;	// Si attaque réussie, return true
 		}
+	}
+	else {
+		//		cout << "attaque reussie" << endl;
 	}
 
 	return false;
@@ -207,7 +254,7 @@ void gestionTourJoueur(HWND dofusScreen)
 	Sleep(500);
 	gestionAction(dofusScreen, 2, 5, 2);
 	Sleep(2000);
-	gestionAction(dofusScreen, 2, 5, 2);	
+	gestionAction(dofusScreen, 2, 5, 2);
 }
 
 
@@ -225,7 +272,7 @@ bool gestionCombat(HWND dofusScreen)
 
 	if (detectionDebutCombat(dofusScreen, modeCreature, modeTactique))		// Début de combat détecté
 	{
-//		cout << "Debut combat detecte" << endl;
+		//		cout << "Debut combat detecte" << endl;
 		Sleep(1500);
 
 		if (modeCreature) {
@@ -235,9 +282,12 @@ bool gestionCombat(HWND dofusScreen)
 		if (modeTactique) {
 			leftClickResPos(posModeTactique, 1500);
 		}
-		
+
 		leftClickResPos(posDebutCombat, 1000);
 		Sleep(2500);
+
+		int theme;
+		detectionTheme(dofusScreen, theme);
 
 		while (true)
 		{
@@ -261,5 +311,3 @@ bool gestionCombat(HWND dofusScreen)
 
 	return false;
 }
-
-

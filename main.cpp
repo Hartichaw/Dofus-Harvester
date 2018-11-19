@@ -19,7 +19,7 @@ using namespace std;
 using namespace cv;
 
 //const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.14:3";
-const LPCSTR NAME_DOFUS_WINDOW = "Sac-Lerieur - Dofus 2.46.16:0";
+const LPCSTR NAME_DOFUS_WINDOW = "Sac-Lerieur - Dofus 2.46.17.1";
 
 bool init(HWND & hWnd)
 {	
