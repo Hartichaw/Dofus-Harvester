@@ -135,7 +135,7 @@ vector<POINT> detectionColorArray(Mat imageBGR, Scalar lowerb, Scalar upperb, in
 
 	for (int i = 0; i < posContours.size(); i++) {
 		posArray[i].x = x1 + posContours[i].x;
-		posArray[i].y = y1 + posContours[i].y + 22;
+		posArray[i].y = y1 + posContours[i].y + 22;		// Correction de 22 sur l'axe Y
 	}
 
 	if (DEBUG) {

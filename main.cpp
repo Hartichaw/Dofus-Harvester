@@ -14,13 +14,17 @@
 #include "recolterRessources.h"
 #include "gestionImage.h"
 #include "gestionPopUp.h"
+#include "config.h"
 
 using namespace std;
 using namespace cv;
 
 
+#if USER == CED
 const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.48.17.1";
-//const LPCSTR NAME_DOFUS_WINDOW = "Sac-Lerieur - Dofus 2.46.17.1";
+#elif USER == JU
+const LPCSTR NAME_DOFUS_WINDOW = "Sac-Lerieur - Dofus 2.48.17.1";
+#endif
 
 
 bool init(HWND & hWnd)
@@ -58,22 +62,18 @@ int main(/*int argc, char** argv*/)
     //trajetAstrub();
     //trajetBanqueAstrub();
     //gestionBanqueAstrub();  // Décharge tous l'inventaire dans la banque
-	
 //	trajetChampsBonta();
-
- //   recolterChampsBonta(dofusScreen);
-	
+//    recolterChampsBonta(dofusScreen);
 //	recolterRessourcesMap(dofusScreen);
 
-	//waitKey(0);
-
-	navigator testNav;
+	
+/*	navigator testNav;
 	bool finTrajet;
 	
 		// Debug gestion combat et pop-up
 	while (1)
 	{
-		
+	
 		testNav.travelCircuit("1R;1U;4L;1U;9R;1U;10L;1U;10R;1U;10L;1U;10R;1U;10L;1U;10R;1U;10L;1U;");
 		do
 		{
@@ -81,21 +81,27 @@ int main(/*int argc, char** argv*/)
 			recolterRessourcesMap(dofusScreen);
 			//gestionCombat(dofusScreen);
 		} while (!finTrajet);
-		//recolterRessourcesMap(dofusScreen);
-		
-		//recolterChampsBonta(dofusScreen);
 
-	/*	t1 = GetTickCount();
-		if (gestionPopUps(dofusScreen)) {
-
-		}
-		t2 = GetTickCount();
-		cout << "Temps d'execution gestion pop-ups : " << t2 - t1 << endl;
-	*/
 		Sleep(1500);
 	}
+*/
 
+	while (1) {
+		gestionCombat(dofusScreen);
+		Sleep(1500);
+	}
+		
+	//recolterRessourcesMap(dofusScreen);
 
+	//recolterChampsBonta(dofusScreen);
+
+/*	t1 = GetTickCount();
+	if (gestionPopUps(dofusScreen)) {
+
+	}
+	t2 = GetTickCount();
+	cout << "Temps d'execution gestion pop-ups : " << t2 - t1 << endl;
+*/
 
 	cout << "Fini !" << endl;
 

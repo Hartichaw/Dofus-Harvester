@@ -11,6 +11,7 @@
 #include "gestionDeplacement.h"
 #include "gestionCombats.h"
 #include "gestionImage.h"
+#include "config.h"
 
 #define COEFF_PO_SORT 55
 #define COEFF_ZONE_SORT 30
@@ -55,7 +56,11 @@ vector<POINT> detectionPosEnnemis(HWND dofusScreen)		// détecte la posiiton de p
 {
 	Mat	imageBGR = hwnd2mat(dofusScreen);
 
+#if USER == CED
 	vector<POINT> posArray = detectionColorArray(imageBGR, Scalar(200, 0, 0), Scalar(255, 60, 60), 278, 1257, 14, 733, 25, 0, false);
+#elif USER == JU
+	vector<POINT> posArray = detectionColorArray(imageBGR, Scalar(200, 0, 0), Scalar(255, 20, 20), 278, 1257, 14, 733, 25, 0, false);
+#endif // USER == CED
 
 	return posArray;
 }
@@ -64,9 +69,15 @@ bool detectionPosJoueur(HWND dofusScreen, POINT & posJoueur)	// détecte la pos d
 {
 	Mat	imageBGR = hwnd2mat(dofusScreen);
 
+#if USER == CED
 	if (detectionColorPos(imageBGR, Scalar(0, 0, 200), Scalar(70, 70, 255), 278, 1257, 14, 733, posJoueur, 25, false)) {	// Joueur
 		return true;
 	}
+#elif USER == JU
+	if (detectionColorPos(imageBGR, Scalar(0, 0, 200), Scalar(20, 20, 255), 278, 1257, 14, 733, posJoueur, 25, false)) {	// Joueur
+		return true;
+	}
+#endif
 
 	return false;
 }
@@ -256,9 +267,10 @@ void gestionTourJoueur(HWND dofusScreen)
 	tour++;		// numéro du tour
 
 	Sleep(500);
-	gestionAction(dofusScreen, 2, 5, 2);
+	//bool gestionAction(HWND dofusScreen, int sort, int poSort, int zoneSort)
+	gestionAction(dofusScreen, 6, 5, 2);
 	Sleep(2000);
-	gestionAction(dofusScreen, 2, 5, 2);
+	gestionAction(dofusScreen, 6, 5, 2);
 }
 
 
