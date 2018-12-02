@@ -327,3 +327,24 @@ bool gestionCombat(HWND dofusScreen)
 
 	return false;
 }
+/*
+---------IA COMBAT---------
+*/
+
+//Renvoie la position du monstre le plus proche
+void IAcombat::enemyDetection()
+{}
+//Déplacement besoin
+void IAcombat::move()
+{}
+//Attaque si possible
+void IAcombat::attack()
+{}
+//Fini le tour et le combat si possible
+void IAcombat::endTurn()
+{}
+//Permet de savoir si on est en combat ou non
+bool IAcombat::inCombat()
+{
+	return true;
+}
