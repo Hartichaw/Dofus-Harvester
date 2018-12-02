@@ -18,7 +18,7 @@ public:
 
 	//Attributs
 	const int DEBUG_DR = 0; // 0 pour ne pas display les images
-	const std::string IMG_DIR = "C:/Users/cedri/Pictures/";
+	const std::string IMG_DIR = "curseurs/";
 	const int delay = 150;
 
 	/*
