@@ -1,3 +1,7 @@
+#include <vector>
+#include <map>
+#include <iostream>
+#include <stdio.h>
 
 void leftClick(int x, int y);
 void leftClickResPos(POINT pt, int delay);
@@ -13,3 +17,26 @@ void moveMapRight();
 void trajetAstrub();
 void trajetBanqueAstrub();
 void trajetChampsBonta();
+
+#ifndef DEF_NAVIGATOR
+#define DEF_NAVIGATOR
+
+class navigator
+{
+public:
+	navigator()
+	{}
+
+	void travelCircuit(std::string name);
+	bool nextMap();
+
+
+private:
+
+	int indexTrajet = 0;
+	std::vector<std::string> trajet;
+	std::map<std::string, std::vector<std::string>> travelMap;
+
+};
+
+#endif

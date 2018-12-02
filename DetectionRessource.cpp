@@ -42,6 +42,8 @@ POINT harvestManager::getRessourcePos(POINT lastPoint)
 	VARIABLES
 	*/
 
+	HANDLE hConsole;
+	hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
 	//	Mat Img = imgProvider(PRESS_Y, dofusScreen); // pressing y
 
@@ -143,15 +145,23 @@ POINT harvestManager::getRessourcePos(POINT lastPoint)
 		output_pt.y = tabRessources[i][0] + 22;
 
 		SetCursorPos(0, 0);
-		Sleep(10);
+		Sleep(delay);
 		SetCursorPos(output_pt.x, output_pt.y);
-		Sleep(100);
+		Sleep(delay);
 		regionCurseur = getCursor();
 		//imwrite(string{ "C:/Users/cedri/Pictures/curseur/Cursor" + to_string(i) + ".png"}, regionCurseur);
 		if (checkCurseur(regionCurseur))
 		{
-			//cout << "pssage pushback // x = " << tabRessources[i][1] << "    y = " << tabRessources[i][0] << endl;
+			SetConsoleTextAttribute(hConsole, 3);
+			cout << "Ressource found:  x = " << tabRessources[i][1] << "    y = " << tabRessources[i][0] << endl;
+			SetConsoleTextAttribute(hConsole, 15);
 			return output_pt;
+		}
+		else
+		{
+			SetConsoleTextAttribute(hConsole, 4);
+			cout << "incorrect:  x = " << tabRessources[i][1] << "    y = " << tabRessources[i][0] << endl;
+			SetConsoleTextAttribute(hConsole, 15);
 		}
 
 

@@ -55,7 +55,7 @@ vector<POINT> detectionPosEnnemis(HWND dofusScreen)		// détecte la posiiton de p
 {
 	Mat	imageBGR = hwnd2mat(dofusScreen);
 
-	vector<POINT> posArray = detectionColorArray(imageBGR, Scalar(200, 0, 0), Scalar(255, 20, 20), 278, 1257, 14, 733, 25, 0, false);
+	vector<POINT> posArray = detectionColorArray(imageBGR, Scalar(200, 0, 0), Scalar(255, 60, 60), 278, 1257, 14, 733, 25, 0, false);
 
 	return posArray;
 }
@@ -64,7 +64,7 @@ bool detectionPosJoueur(HWND dofusScreen, POINT & posJoueur)	// détecte la pos d
 {
 	Mat	imageBGR = hwnd2mat(dofusScreen);
 
-	if (detectionColorPos(imageBGR, Scalar(0, 0, 200), Scalar(20, 20, 255), 278, 1257, 14, 733, posJoueur, 25, false)) {	// Joueur
+	if (detectionColorPos(imageBGR, Scalar(0, 0, 200), Scalar(70, 70, 255), 278, 1257, 14, 733, posJoueur, 25, false)) {	// Joueur
 		return true;
 	}
 
@@ -209,7 +209,9 @@ bool gestionAction(HWND dofusScreen, int sort, int poSort, int zoneSort)
 		cout << "echec pos joueur" << endl;
 		return false;
 	}
-	//cout << "succes pos joueur" << endl;
+
+	cout << "Position joueur: " << posJoueur.x << "," << posJoueur.y << endl;
+
 	//Sleep(200);
 	vector<POINT> posEnnemis = detectionPosEnnemis(dofusScreen);		// détecte la pos des ennemis
 
@@ -218,6 +220,8 @@ bool gestionAction(HWND dofusScreen, int sort, int poSort, int zoneSort)
 		return false;
 	}
 	//cout << "succes pos ennemis" << endl;
+
+	cout << "Position Monstre: " << posEnnemi.x << "," << posEnnemi.y << endl;
 
 	if (gestionAttaque(dofusScreen, sort, poSort, zoneSort, posJoueur, posEnnemi)) {		// Si on peut attaquer sans bouger, on le fait et return true
 	//	cout << "attaque reussie" << endl;

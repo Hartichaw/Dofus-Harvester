@@ -14,44 +14,23 @@ using namespace std;
 
 void recolterRessourcesMap(HWND dofusScreen)
 {
-    // Récolte toutes les ressources sur la map
-    // S'il n'y a aucune ressource sur la map on sort immédiatement de la fonction
 
 	// Détection des ressources
 
 	POINT posRessources{0,0};
 
-
-
-	/*vector<POINT> posRessources(5);		// Simulation des pos des ressources
-
-	posRessources[0].x = 605;
-	posRessources[0].y = 465;
-
-	posRessources[1].x = 649;
-	posRessources[1].y = 490;
-
-	posRessources[2].x = 562;
-	posRessources[2].y = 490;
-
-	posRessources[3].x = 509;
-	posRessources[3].y = 524;
-
-	posRessources[4].x = 505;
-	posRessources[4].y = 558;
-
-	*/
 	harvestManager recolteur = harvestManager(dofusScreen);
 	do		// Si aucune ressource n'est détectée
 	{
 		posRessources = recolteur.getRessourcePos(posRessources);
-		cout << "ressource located:" << posRessources.x << "," << posRessources.y << endl;
+		//cout << "ressource located:" << posRessources.x << "," << posRessources.y << endl;
 		if (posRessources.x >= 0 && posRessources.y >= 0)
-		{
 			leftClick(posRessources.x, posRessources.y);
-		}
 		
-		Sleep(3000);
+		
+		Sleep(4000);
+		//gestionCombat(dofusScreen);
+		//gestionPopUps(dofusScreen);
 	}while (posRessources.x >= 0 && posRessources.y >= 0);
 
 	cout << "plus de ressources sur la map" << endl;
@@ -69,19 +48,19 @@ void recolterChampsBonta(HWND dofusScreen)
     moveMapUp();
 
     for (i=0 ; i<3 ; i++) {
-        recolterRessourcesMap(dofusScreen);
+        //recolterRessourcesMap(dofusScreen);
         moveMapLeft();
     }
-	recolterRessourcesMap(dofusScreen);
+	//recolterRessourcesMap(dofusScreen);
 
     moveMapLeft();
     moveMapUp();
 
     for (i=0 ; i<5 ; i++) {
-        recolterRessourcesMap(dofusScreen);
+        //recolterRessourcesMap(dofusScreen);
         moveMapRight();
     }
-	recolterRessourcesMap(dofusScreen);
+	//recolterRessourcesMap(dofusScreen);
 
     for (i=0 ; i<4 ; i++) {
         moveMapRight();
@@ -89,7 +68,7 @@ void recolterChampsBonta(HWND dofusScreen)
 	moveMapUp();
 
 	for (i = 0; i < 10; i++) {
-		recolterRessourcesMap(dofusScreen);
+		//recolterRessourcesMap(dofusScreen);
 		moveMapLeft();
 	}
     moveMapUp();

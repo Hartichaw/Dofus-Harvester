@@ -18,8 +18,10 @@
 using namespace std;
 using namespace cv;
 
-//const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.46.14:3";
-const LPCSTR NAME_DOFUS_WINDOW = "Sac-Lerieur - Dofus 2.46.17.1";
+
+const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.48.17.1";
+//const LPCSTR NAME_DOFUS_WINDOW = "Sac-Lerieur - Dofus 2.46.17.1";
+
 
 bool init(HWND & hWnd)
 {	
@@ -46,6 +48,8 @@ int main(/*int argc, char** argv*/)
 {
 	HWND dofusScreen;
 	DWORD t1, t2;
+	bool NO_HARVEST = false;
+	bool HARVEST = true;
 
 	if (!init(dofusScreen)) {
 		return -1;
@@ -63,12 +67,23 @@ int main(/*int argc, char** argv*/)
 
 	//waitKey(0);
 
-
+	navigator testNav;
+	bool finTrajet;
+	
 		// Debug gestion combat et pop-up
 	while (1)
 	{
-
-		gestionCombat(dofusScreen);
+		
+		testNav.travelCircuit("1R;1U;4L;1U;9R;1U;10L;1U;10R;1U;10L;1U;10R;1U;10L;1U;10R;1U;10L;1U;");
+		do
+		{
+			finTrajet = testNav.nextMap();
+			recolterRessourcesMap(dofusScreen);
+			//gestionCombat(dofusScreen);
+		} while (!finTrajet);
+		//recolterRessourcesMap(dofusScreen);
+		
+		//recolterChampsBonta(dofusScreen);
 
 	/*	t1 = GetTickCount();
 		if (gestionPopUps(dofusScreen)) {

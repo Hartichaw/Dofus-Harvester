@@ -1,6 +1,12 @@
-
 #include <windows.h>
+#include <vector>
+#include <string>
+#include <iostream>
+#include "gestionDeplacement.h"
+#include "DetectionRessource.h"
 
+
+using namespace std;
 /** FONCTIONS GENERALES **/
 
 void leftClick(int x, int y)
@@ -107,5 +113,69 @@ void trajetChampsBonta()
     clickHavreSac();
     clickZaapHavreSac();
     doubleClickChampsBonta();
+}
+
+
+/*
+travelCircuit: Permet de parcourir les maps définies d' un circuit  
+*/
+void navigator::travelCircuit(std::string shiftList)
+{
+
+	string travelDelimiter = ";";
+	size_t pos = 0;
+	std::string token;
+	
+
+	//string parsing
+	while ((pos = shiftList.find(travelDelimiter)) != std::string::npos) {
+		token = shiftList.substr(0, pos);
+		trajet.push_back(token);
+		shiftList.erase(0, pos + travelDelimiter.length());
+	}
+
+	//travel index update
+	indexTrajet = 0;
+
+}
+
+bool navigator::nextMap()
+{
+
+		int shiftNb = stoi(trajet[indexTrajet].substr(0, trajet[indexTrajet].size() - 1));
+		char shiftType = trajet[indexTrajet].at(trajet[indexTrajet].size() - 1);
+
+		//cout << "on fait " << shiftNb << "deplacement vers la " << shiftType << endl;
+
+		for (int j = 0; j < shiftNb; j++)
+		{
+			switch (shiftType)
+			{
+			case 'U':
+				cout << "move map UP" << endl;
+				moveMapUp();
+				break;
+			case 'D':
+				cout << "move map DOWN" << endl;
+				moveMapDown();
+				break;
+			case 'L':
+				cout << "move map LEFT" << endl;
+				moveMapLeft();
+				break;
+			case 'R':
+				cout << "move map RIGHT" << endl;
+				moveMapRight();
+				break;
+
+
+			}
+
+		}
+
+	if (indexTrajet == trajet.size() - 1)
+		return true;
+
+	return false;
 }
 
