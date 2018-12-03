@@ -16,11 +16,6 @@ class harvestManager {
 
 public:
 
-	//Attributs
-	const int DEBUG_DR = 0; // 0 pour ne pas display les images
-	const std::string IMG_DIR = "curseurs/";
-	const int delay = 150;
-
 	/*
 	Constructeur
 	*/
@@ -38,17 +33,28 @@ public:
 		//std::cout << std::string(IMG_DIR + "cursor_alchi.png") << " / " << std::string(IMG_DIR + "cursor_bucheron.png") << std::endl;
 
 		dofusScreen = hWindow;
+		DEBUG_DR = false;
 	}
 	/*
-	POINT scanRessource(): Renvoi un point représentant la position de la première ressource récoltable détectée
+	POINT recolterRessourcesMap(): Récolte les ressources présentes sur une map
 	*/
-	POINT getRessourcePos(POINT lastPoint);
+	void recolterRessourcesMap();
+
+	/*
+	Active les traces de Debug
+	*/
+	void setDebugMode(bool mode);
 private:
 
 	//Attributs:
 
 	HWND dofusScreen;
 	cv::Mat curseurPaysan, curseurPecheur, curseurBucheron, curseurAlchi;
+	bool DEBUG_DR; // 0 pour ne pas display les images
+	const std::string IMG_DIR = "curseurs/"; // emplacement des templates de curseurs
+	const int delay = 150;
+
+	//Constantes
 	const int SIZE_SEARCH_ZONE = 10;
 	const int PRESS_Y = 1;
 	const int DETECTION_THRESHOLD = 5;
@@ -59,7 +65,10 @@ private:
 	const float ROW_START_COEFF = 0.04074, ROW_STEP_COEFF = 0.04074, ROW_END_COEFF = 0.8055;
 	const float COL_START_COEFF = 0.20520, COL_STEP_COEFF = 0.02227, COL_END_COEFF = 0.8437;
 
-
+	/*
+	POINT getRessourcePos(): Renvoi un point représentant la position de la première ressource récoltable détectée
+	*/
+	POINT getRessourcePos(POINT lastPoint);
 	/*
 	checkCurseur(): true : curseur correspond à une ressource recoltable
 	*/

@@ -10,6 +10,7 @@
 #include <algorithm>
 #include "gestionImage.h"
 #include "DetectionRessource.h"
+#include "gestionDeplacement.h"
 
 using namespace std;
 using namespace cv;
@@ -149,26 +150,40 @@ POINT harvestManager::getRessourcePos(POINT lastPoint)
 		SetCursorPos(output_pt.x, output_pt.y);
 		Sleep(delay);
 		regionCurseur = getCursor();
-		//imwrite(string{ "C:/Users/cedri/Pictures/curseur/Cursor" + to_string(i) + ".png"}, regionCurseur);
-		if (checkCurseur(regionCurseur))
+		
+		// on verifie que les curseur aient la meme dimension pour les comparer
+		if (regionCurseur.rows == curseurPaysan.rows && regionCurseur.cols == curseurPaysan.cols)
 		{
-			SetConsoleTextAttribute(hConsole, 3);
-			cout << "Ressource found:  x = " << tabRessources[i][1] << "    y = " << tabRessources[i][0] << endl;
-			SetConsoleTextAttribute(hConsole, 15);
-			return output_pt;
+			
+			if (checkCurseur(regionCurseur))
+			{
+				SetConsoleTextAttribute(hConsole, 3);
+				if(DEBUG_DR) 
+					cout << "Ressource found:  x = " << tabRessources[i][1] << "    y = " << tabRessources[i][0] << endl;
+				SetConsoleTextAttribute(hConsole, 15);
+				return output_pt;
+			}
+			else
+			{
+				SetConsoleTextAttribute(hConsole, 4);
+				if(DEBUG_DR) 
+					cout << "incorrect:  x = " << tabRessources[i][1] << "    y = " << tabRessources[i][0] << endl;
+				SetConsoleTextAttribute(hConsole, 15);
+			}
 		}
-		else
+		else if (DEBUG_DR)
 		{
-			SetConsoleTextAttribute(hConsole, 4);
-			cout << "incorrect:  x = " << tabRessources[i][1] << "    y = " << tabRessources[i][0] << endl;
-			SetConsoleTextAttribute(hConsole, 15);
+			cout << "Les curseurs n'ont pas la même dimension: template(" << curseurPaysan.rows << ", " << curseurPaysan.cols << ")   extracted(" << regionCurseur.rows << ", " << regionCurseur.cols << ")" << endl;
+			imwrite(string{ "debugCursor/Cursor" + to_string(i) + ".png" }, regionCurseur);
 		}
+
 
 
 	}
+	
 
 	// Windows creation in debug mode
-	if (DEBUG_DR == 1)
+	/*if (DEBUG_DR)
 	{
 
 		for (int i = 0; i<outputTab.size(); i++)
@@ -187,7 +202,7 @@ POINT harvestManager::getRessourcePos(POINT lastPoint)
 		//imwrite("C:/Users/cedri/Pictures/Bot-gray.png", displayImg);
 
 
-	}
+	}*/
 
 
 	return null_output;
@@ -204,13 +219,6 @@ checkCurseur(): true : curseur correspond à une ressource recoltable
 bool harvestManager::checkCurseur(Mat curseur)
 {
 	Mat diffPaysan, diffPecheur, diffBucheron, diffAlchi;
-
-	// on verifie que les curseur aient la meme dimension
-	if (curseur.rows != curseurPaysan.rows || curseur.cols != curseurPaysan.cols)
-	{
-		cout << "Les curseurs n'ont pas la même dimension" << endl;
-		return false;
-	}
 
 	subtract(curseurPaysan, curseur, diffPaysan);
 	subtract(curseurPecheur, curseur, diffPecheur);
@@ -235,6 +243,35 @@ bool harvestManager::checkCurseur(Mat curseur)
 }
 
 
+void harvestManager::recolterRessourcesMap()
+{
+
+	// Détection des ressources
+
+	POINT posRessources{ 0,0 };
+
+	
+	do		// Si aucune ressource n'est détectée
+	{
+		posRessources = getRessourcePos(posRessources);
+		//cout << "ressource located:" << posRessources.x << "," << posRessources.y << endl;
+		if (posRessources.x >= 0 && posRessources.y >= 0)
+			leftClick(posRessources.x, posRessources.y);
 
 
+		Sleep(4000);
+		//gestionCombat(dofusScreen);
+		//gestionPopUps(dofusScreen);
+	} while (posRessources.x >= 0 && posRessources.y >= 0);
 
+	if (DEBUG_DR) 
+		cout << "plus de ressources sur la map" << endl;
+
+
+}
+
+
+void harvestManager::setDebugMode(bool mode)
+{
+	DEBUG_DR = mode;
+}
