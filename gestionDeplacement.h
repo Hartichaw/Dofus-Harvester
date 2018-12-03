@@ -34,7 +34,7 @@ public:
 private:
 
 	int indexTrajet = 0;
-	std::vector<std::string> trajet;
+	std::vector<char> trajet;
 	std::map<std::string, std::vector<std::string>> travelMap;
 
 };
