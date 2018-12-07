@@ -3,6 +3,7 @@
 #include <opencv2/highgui.hpp>
 
 bool gestionCombat(HWND dofusScreen);
+bool gestionCombat_test(HWND dofusScreen);
 
 #ifndef DEF_IACOMBAT
 #define DEF_IACOMBAT
@@ -28,7 +29,19 @@ public:
 	//Fini le tour et le combat si possible
 	void endTurn();
 	//Permet de savoir si on est en combat ou non
-	bool inCombat();
+	bool inCombat(HWND dofusScreen);
+	
+	bool detectFinCombat(HWND dofusScreen, POINT & posFinCombat);
+
+	bool detectTourJoueur(HWND dofusScreen);
+
+	// Prépare au combat : mode créature et tactique + choix de la position sur la map + clique sur prêt
+	void prepareCombat(HWND dofusScreen);
+
+	void detectTheme(HWND dofusScreen);
+
+	
+
 
 
 
@@ -48,6 +61,8 @@ private:
 	POINT posJoueur;
 	POINT posEnemy;
 
+	int theme;
+
 	/* ----- Constantes ----- */
 
 	int COEFF_PO_SORT = 55;
@@ -62,9 +77,9 @@ private:
 	//Positions boutons divers
 	POINT posDebutCombat = { 1190, 764 };
 	POINT posFinTour = { 1190, 764 };
-	POINT posModeCreature = { 1195, 805 };
-	POINT posModeTactique = { 1175, 805 };
-
+	POINT posModeCreature = { 1172, 805 };
+	//POINT posModeTactique = { 1172, 805 };
+	POINT posModeTactique = { 1148, 805 };
 
 };
 

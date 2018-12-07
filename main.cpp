@@ -11,6 +11,7 @@
 #include "gestionDeplacement.h"
 #include "gestionCombats.h"
 #include "gestionInterface.h"
+#include "DetectionRessource.h"
 #include "recolterRessources.h"
 #include "gestionImage.h"
 #include "gestionPopUp.h"
@@ -23,7 +24,7 @@ using namespace cv;
 #if USER == CED
 const LPCSTR NAME_DOFUS_WINDOW = "Hartichaw - Dofus 2.48.17.1";
 #elif USER == JU
-const LPCSTR NAME_DOFUS_WINDOW = "Sac-Lerieur - Dofus 2.48.17.1";
+const LPCSTR NAME_DOFUS_WINDOW = "Sac-Lerieur - Dofus 2.48.18.0";
 #endif
 
 
@@ -66,8 +67,8 @@ int main(/*int argc, char** argv*/)
 //    recolterChampsBonta(dofusScreen);
 //	recolterRessourcesMap(dofusScreen);
 
-	
-/*	navigator testNav;
+	/*
+	navigator testNav;
 	bool finTrajet;
 	
 		// Debug gestion combat et pop-up
@@ -84,11 +85,30 @@ int main(/*int argc, char** argv*/)
 
 		Sleep(1500);
 	}
-*/
+	*/
 
+	// Debug cursor :
+/*	navigator testNav;
+	harvestManager recolteur = harvestManager(dofusScreen);
+	recolteur.setDebugMode(true);
+	bool finTrajet;
+
+	while (1)
+	{
+		testNav.travelCircuit("4R;1U;1L;3D;");
+		do
+		{
+			recolteur.recolterRessourcesMap();
+			finTrajet = testNav.nextMap();
+		} while (!finTrajet);
+		Sleep(3000);
+	}
+	*/
+
+	
 	while (1) {
 		gestionCombat(dofusScreen);
-		Sleep(1500);
+		Sleep(3500);
 	}
 		
 	//recolterRessourcesMap(dofusScreen);

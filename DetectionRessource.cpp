@@ -166,8 +166,11 @@ POINT harvestManager::getRessourcePos(POINT lastPoint)
 			else
 			{
 				SetConsoleTextAttribute(hConsole, 4);
-				if(DEBUG_DR) 
+				if(DEBUG_DR) {
 					cout << "incorrect:  x = " << tabRessources[i][1] << "    y = " << tabRessources[i][0] << endl;
+					imwrite(string{ "debugCursor/Cursor" + to_string(i) + ".png" }, regionCurseur);
+				}
+				
 				SetConsoleTextAttribute(hConsole, 15);
 			}
 		}

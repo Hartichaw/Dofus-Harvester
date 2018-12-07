@@ -276,49 +276,32 @@ void gestionTourJoueur(HWND dofusScreen)
 
 bool gestionCombat(HWND dofusScreen)
 {
-	bool finCombat = false, finTour = false;
-	bool modeCreature = false, modeTactique = false;
-	POINT posFinCombat;
-	POINT posDebutCombat = { 1190, 764 };
-	POINT posFinTour = { 1190, 764 };
-	POINT posModeCreature = { 1195, 805 };
-	POINT posModeTactique = { 1175, 805 };
+	IAcombat combat;
 
-	//cout << "fonction combat" << endl;
+	if (combat.inCombat(dofusScreen)) {			// combat détecté
 
-	if (detectionDebutCombat(dofusScreen, modeCreature, modeTactique))		// Début de combat détecté
-	{
-		//		cout << "Debut combat detecte" << endl;
-		Sleep(1500);
-
-		if (modeCreature) {
-			leftClickResPos(posModeCreature, 1500);
-		}
-
-		if (modeTactique) {
-			leftClickResPos(posModeTactique, 1500);
-		}
-
-		leftClickResPos(posDebutCombat, 1000);
-		Sleep(2500);
+		combat.prepareCombat(dofusScreen);		
 
 		int theme;
 		detectionTheme(dofusScreen, theme);
 
 		while (true)
 		{
-			detectionCombat(dofusScreen, finCombat, finTour, posFinCombat);
 
-			if (finCombat)		// fin de combat détecté
-			{
-				Sleep(500);
-				leftClickResPos(posFinCombat, 2000);
-				return true;
-			}
-			else if (finTour)	// Si fin tour est détecté, alors c'est au tour du joueur
+			if (combat.detectTourJoueur(dofusScreen))		// Si c'est au tour du joueur
 			{
 				gestionTourJoueur(dofusScreen);
-				leftClickResPos(posFinTour, 2000);
+				cout << "Tour joueur" << endl;
+			}
+
+			POINT posFinCombat;
+
+			if (combat.detectFinCombat(dofusScreen, posFinCombat))		// Si le combat est terminé
+			{
+				leftClickResPos(posFinCombat, 2000);		// Ferme la fenêtre de fin de combat
+				cout << "Fin combat" << endl;
+				Sleep(500);
+				return true;
 			}
 
 			Sleep(2000);
@@ -327,6 +310,8 @@ bool gestionCombat(HWND dofusScreen)
 
 	return false;
 }
+
+
 /*
 ---------IA COMBAT---------
 */
@@ -344,7 +329,83 @@ void IAcombat::attack()
 void IAcombat::endTurn()
 {}
 //Permet de savoir si on est en combat ou non
-bool IAcombat::inCombat()
+bool IAcombat::inCombat(HWND dofusScreen)
 {
-	return true;
+	POINT posCible;
+	Mat imageBGR = hwnd2mat(dofusScreen);
+
+	if (detectionColorPos(imageBGR, Scalar(0, 230, 85), Scalar(50, 255, 215), 1094, 1295, 686, 775, posCible, 1000, false)) {	// detection Debut Combat
+		Sleep(500);
+		return true;
+	}
+
+	return false;
+}
+
+
+bool IAcombat::detectFinCombat(HWND dofusScreen, POINT & posFinCombat)
+{
+	Mat imageBGR = hwnd2mat(dofusScreen);
+
+	if (detectionColorPos(imageBGR, Scalar(0, 230, 85), Scalar(50, 255, 215), 603, 893, 449, 708, posFinCombat, 1500, false)) {	// fin combat
+		return true;
+	}
+
+	return false;
+}
+
+
+bool IAcombat::detectTourJoueur(HWND dofusScreen)
+{
+	POINT posCible;
+	Mat imageBGR = hwnd2mat(dofusScreen);
+	
+	if (detectionColorPos(imageBGR, Scalar(0, 230, 85), Scalar(50, 255, 215), 1094, 1295, 686, 775, posCible, 1000, false)) {	// Détecte si c'est au tour du joueur
+		return true;
+	}
+
+	return false;
+}
+
+void IAcombat::detectTheme(HWND dofusScreen)
+{
+	POINT posCible;
+	Mat imageBGR = hwnd2mat(dofusScreen);
+
+	if (detectionColorPos(imageBGR, Scalar(107, 207, 192), Scalar(127, 227, 212), 278, 1257, 14, 733, posCible, 10000, true)) {	// Thème herbe amakna
+		//couleur detectee (BGR) : 117, 217, 202
+		// nb pixels detectés : 438697
+		theme = 0;
+	}
+	else if (detectionColorPos(imageBGR, Scalar(92, 186, 188), Scalar(112, 206, 208), 278, 1257, 14, 733, posCible, 10000, true)) {	// Thème Astrub
+	// couleur detectée : 102 196 198
+		theme = 1;
+	}
+	else {
+		cout << "Echec detection theme" << endl;
+		theme = 0;		// Par défaut
+	}
+
+}
+
+
+
+void IAcombat::prepareCombat(HWND dofusScreen)
+{
+	POINT posCible;
+	Mat imageBGR = hwnd2mat(dofusScreen);
+
+	if (detectionColorPos(imageBGR, Scalar(150, 150, 150), Scalar(180, 180, 180), 1138, 1159, 775, 800, posCible, 20, false)) {	// detection mode tactique
+		leftClickResPos(posModeTactique, 1500);
+		Sleep(500);
+	}
+	
+	if (detectionColorPos(imageBGR, Scalar(150, 150, 150), Scalar(180, 180, 180), 1162, 1183, 775, 800, posCible, 20, false)) {	// detection mode créature
+		leftClickResPos(posModeCreature, 1500);
+		Sleep(500);
+	}
+
+	leftClickResPos(posDebutCombat, 1000);
+	Sleep(2500);
+
 }
