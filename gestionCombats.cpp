@@ -274,29 +274,27 @@ void gestionTourJoueur(HWND dofusScreen)
 }
 
 
-bool gestionCombat(HWND dofusScreen)
+bool gestionCombat(HWND inputScreen)
 {
-	IAcombat combat;
+	IAcombat combat(inputScreen);
 
-	if (combat.inCombat(dofusScreen)) {			// combat détecté
+	if (combat.inCombat()) {			// combat détecté
 
-		combat.prepareCombat(dofusScreen);		
+		combat.prepareCombat();		
 
-		int theme;
-		detectionTheme(dofusScreen, theme);
+		combat.detectTheme();
 
 		while (true)
 		{
-
-			if (combat.detectTourJoueur(dofusScreen))		// Si c'est au tour du joueur
+			if (combat.detectTourJoueur())		// Si c'est au tour du joueur
 			{
-				gestionTourJoueur(dofusScreen);
+				gestionTourJoueur(inputScreen);
 				cout << "Tour joueur" << endl;
 			}
 
 			POINT posFinCombat;
 
-			if (combat.detectFinCombat(dofusScreen, posFinCombat))		// Si le combat est terminé
+			if (combat.detectFinCombat(posFinCombat))		// Si le combat est terminé
 			{
 				leftClickResPos(posFinCombat, 2000);		// Ferme la fenêtre de fin de combat
 				cout << "Fin combat" << endl;
@@ -329,7 +327,7 @@ void IAcombat::attack()
 void IAcombat::endTurn()
 {}
 //Permet de savoir si on est en combat ou non
-bool IAcombat::inCombat(HWND dofusScreen)
+bool IAcombat::inCombat()
 {
 	POINT posCible;
 	Mat imageBGR = hwnd2mat(dofusScreen);
@@ -343,7 +341,7 @@ bool IAcombat::inCombat(HWND dofusScreen)
 }
 
 
-bool IAcombat::detectFinCombat(HWND dofusScreen, POINT & posFinCombat)
+bool IAcombat::detectFinCombat(POINT & posFinCombat)
 {
 	Mat imageBGR = hwnd2mat(dofusScreen);
 
@@ -355,7 +353,7 @@ bool IAcombat::detectFinCombat(HWND dofusScreen, POINT & posFinCombat)
 }
 
 
-bool IAcombat::detectTourJoueur(HWND dofusScreen)
+bool IAcombat::detectTourJoueur()
 {
 	POINT posCible;
 	Mat imageBGR = hwnd2mat(dofusScreen);
@@ -367,7 +365,7 @@ bool IAcombat::detectTourJoueur(HWND dofusScreen)
 	return false;
 }
 
-void IAcombat::detectTheme(HWND dofusScreen)
+void IAcombat::detectTheme()
 {
 	POINT posCible;
 	Mat imageBGR = hwnd2mat(dofusScreen);
@@ -390,7 +388,7 @@ void IAcombat::detectTheme(HWND dofusScreen)
 
 
 
-void IAcombat::prepareCombat(HWND dofusScreen)
+void IAcombat::prepareCombat()
 {
 	POINT posCible;
 	Mat imageBGR = hwnd2mat(dofusScreen);

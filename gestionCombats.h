@@ -2,8 +2,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-bool gestionCombat(HWND dofusScreen);
-bool gestionCombat_test(HWND dofusScreen);
+bool gestionCombat(HWND inpusScreen);
 
 #ifndef DEF_IACOMBAT
 #define DEF_IACOMBAT
@@ -13,8 +12,9 @@ class IAcombat
 public:
 	/* ----- Constructeurs ----- */
 	// Le code dans un constructeur est exécuté à la déclaration de l'objet
-	IAcombat()
+	IAcombat(HWND inputScreen)
 	{// mais pour l'instant on exécute rien à la déclaration
+		dofusScreen = inputScreen;
 	}
 
 	/* ----- Méthodes Publiques ----- */
@@ -29,16 +29,16 @@ public:
 	//Fini le tour et le combat si possible
 	void endTurn();
 	//Permet de savoir si on est en combat ou non
-	bool inCombat(HWND dofusScreen);
+	bool inCombat();
 	
-	bool detectFinCombat(HWND dofusScreen, POINT & posFinCombat);
+	bool detectFinCombat(POINT & posFinCombat);
 
-	bool detectTourJoueur(HWND dofusScreen);
+	bool detectTourJoueur();
 
 	// Prépare au combat : mode créature et tactique + choix de la position sur la map + clique sur prêt
-	void prepareCombat(HWND dofusScreen);
+	void prepareCombat();
 
-	void detectTheme(HWND dofusScreen);
+	void detectTheme();
 
 	
 
@@ -81,6 +81,7 @@ private:
 	//POINT posModeTactique = { 1172, 805 };
 	POINT posModeTactique = { 1148, 805 };
 
+	HWND dofusScreen;
 };
 
 #endif
